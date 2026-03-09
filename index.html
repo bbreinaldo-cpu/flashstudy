@@ -80,6 +80,10 @@ self.addEventListener('fetch', e => {
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
   if (typeof pdfjsLib !== 'undefined') {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -176,6 +180,12 @@ body::before {
 .tear:nth-child(8) { top: 95px; left: 58px; animation-delay: 0s; }
 .tear:nth-child(9) { top: 95px; right: 55px; animation-delay: 0.3s; }
 @keyframes tearFall { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(20px)} }
+@keyframes mascotBounce { 0%,100%{transform:translateY(0) rotate(0)} 25%{transform:translateY(-22px) rotate(-6deg)} 50%{transform:translateY(-16px) rotate(6deg)} 75%{transform:translateY(-8px) rotate(-3deg)} }
+.mascot-container { cursor:pointer; }
+.mascot-container.bounce .mascot-svg { animation:mascotBounce 0.55s cubic-bezier(.36,.07,.19,.97) both !important; }
+.mascot-speech { position:absolute;top:-52px;left:50%;transform:translateX(-50%);background:white;color:#1a1a2e;border-radius:18px;padding:7px 14px;font-size:13px;font-weight:800;white-space:nowrap;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:20;box-shadow:0 4px 16px rgba(0,0,0,0.35);font-family:var(--font-body); }
+.mascot-speech::after { content:'';position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:white; }
+.mascot-speech.show { opacity:1; }
 
 /* State toggling */
 .mascot-container.state-happy .sparkle { opacity: 1; }
@@ -868,84 +878,70 @@ body::before {
 
 <script>
 // =============================================
-// USER MANAGEMENT SYSTEM
+// FIREBASE SETUP
 // =============================================
-const USERS_KEY = 'fs6_users';
-const SESSION_KEY = 'fs6_session';
+const firebaseConfig = {
+  apiKey: "AIzaSyApGGWpWeshXKpMfYX6tMBNYTixWAZh_fY",
+  authDomain: "flashstudy-v6.firebaseapp.com",
+  projectId: "flashstudy-v6",
+  storageBucket: "flashstudy-v6.firebasestorage.app",
+  messagingSenderId: "259057886696",
+  appId: "1:259057886696:web:da0727fb8155b29cae305d",
+  measurementId: "G-B90BER0JB3"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-function getUsers() {
-  try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch { return []; }
-}
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-function getSession() {
-  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
-}
-function setSession(user) {
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-}
-function clearSession() {
-  sessionStorage.removeItem(SESSION_KEY);
-}
-
-async function hashPassword(pass) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(pass + 'flashstudy_v6_salt');
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
-
+// =============================================
+// AUTH FUNCTIONS
+// =============================================
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;
   const errEl = document.getElementById('loginErr');
   errEl.style.display = 'none';
-
   if (!email || !pass) { showAuthErr('loginErr','Preencha e-mail e senha.'); return; }
-
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-  if (!user) { showAuthErr('loginErr','Usuário não encontrado. Crie uma conta.'); setMascotState('loginMascot','state-worried'); return; }
-
-  const hash = await hashPassword(pass);
-  if (hash !== user.passwordHash) { showAuthErr('loginErr','Senha incorreta.'); setMascotState('loginMascot','state-sad'); return; }
-
-  setSession({ id: user.id, email: user.email, name: user.name });
-  setMascotState('loginMascot','state-fire');
-  setTimeout(() => launchApp(user), 500);
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    // onAuthStateChanged handles navigation
+  } catch(e) {
+    if (e.code==='auth/user-not-found'||e.code==='auth/invalid-credential'||e.code==='auth/invalid-email') {
+      showAuthErr('loginErr','Usuário não encontrado. Crie uma conta.');
+      setMascotState('loginMascot','state-worried');
+    } else if (e.code==='auth/wrong-password') {
+      showAuthErr('loginErr','Senha incorreta.');
+      setMascotState('loginMascot','state-sad');
+    } else {
+      showAuthErr('loginErr', e.message || 'Erro ao entrar. Verifique seus dados.');
+      setMascotState('loginMascot','state-sad');
+    }
+  }
 }
 
 async function doRegister() {
   const name = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim().toLowerCase();
   const pass = document.getElementById('regPass').value;
-  const errEl = document.getElementById('regErr');
-  errEl.style.display = 'none';
-
   if (!name) { showAuthErr('regErr','Informe seu nome.'); return; }
   if (!email || !email.includes('@')) { showAuthErr('regErr','E-mail inválido.'); return; }
   if (pass.length < 6) { showAuthErr('regErr','Senha deve ter no mínimo 6 caracteres.'); return; }
-
-  const users = getUsers();
-  if (users.find(u => u.email === email)) { showAuthErr('regErr','Este e-mail já está cadastrado.'); return; }
-
-  const hash = await hashPassword(pass);
-  const newUser = { id: generateId(), email, name, passwordHash: hash, createdAt: new Date().toISOString() };
-  users.push(newUser);
-  saveUsers(users);
-
-  setSession({ id: newUser.id, email: newUser.email, name: newUser.name });
-  setTimeout(() => launchApp(newUser), 300);
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: name });
+    // onAuthStateChanged handles navigation
+  } catch(e) {
+    if (e.code==='auth/email-already-in-use') {
+      showAuthErr('regErr','Este e-mail já está cadastrado.');
+    } else {
+      showAuthErr('regErr', e.message || 'Erro ao criar conta.');
+    }
+  }
 }
 
 function doLogout() {
   if (!confirm('Sair da conta?')) return;
-  clearSession();
+  auth.signOut();
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
@@ -980,7 +976,9 @@ function togglePwd(id, btn) {
 function setMascotState(containerId, state) {
   const el = document.getElementById(containerId) || document.querySelector('.mascot-container');
   if (!el) return;
-  el.className = 'mascot-container ' + state;
+  // preserve bounce class if present
+  const hasBounce = el.classList.contains('bounce');
+  el.className = 'mascot-container ' + state + (hasBounce ? ' bounce' : '');
 }
 function setAppMascotState(state) {
   const el = document.getElementById('appMascotContainer');
@@ -998,6 +996,7 @@ const DEFAULT_APP = {
 };
 
 let _app = null;
+let _cloudSaveTimer = null;
 
 function getDataKey(userId) { return `fs6_data_${userId}`; }
 function getKeysKey(userId) { return `fs6_keys_${userId}`; }
@@ -1011,6 +1010,33 @@ function loadUserData(userId) {
 function saveUserData() {
   if (!currentUser) return;
   localStorage.setItem(getDataKey(currentUser.id), JSON.stringify(_app));
+  clearTimeout(_cloudSaveTimer);
+  _cloudSaveTimer = setTimeout(saveToCloud, 3000);
+}
+async function saveToCloud() {
+  if (!currentUser || !_app) return;
+  try {
+    const uid = currentUser.id;
+    const settingsNoKey = { ..._app.settings };
+    delete settingsNoKey.apiKey;
+    await db.collection('users').doc(uid).collection('appdata').doc('main').set({
+      cards: _app.cards,
+      stats: _app.stats,
+      settings: settingsNoKey,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) { console.warn('Cloud save failed:', e); }
+}
+async function loadFromCloud(userId) {
+  try {
+    const doc = await db.collection('users').doc(userId).collection('appdata').doc('main').get();
+    if (doc.exists) {
+      const data = doc.data();
+      delete data.updatedAt;
+      return data;
+    }
+  } catch(e) { console.warn('Cloud load failed:', e); }
+  return null;
 }
 function loadKeys() {
   if (!currentUser) return {};
@@ -1027,49 +1053,59 @@ window._save = save;
 function rerender() { renderHome(); renderLibrary(); renderStats(); updateChips(); }
 window._rerender = rerender;
 
-function launchApp(user) {
+async function launchApp(user) {
   currentUser = user;
   _app = loadUserData(user.id);
   window._app = _app;
 
-  // Hide auth screens, show app
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('registerScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
 
-  // Update UI with user info
   const initials = user.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('userAvatar').textContent = initials;
   document.getElementById('userNameChip').textContent = user.name.split(' ')[0];
-
-  // Profile section
   document.getElementById('profileAvatar').textContent = initials;
   document.getElementById('profileName').textContent = user.name;
   document.getElementById('profileEmail').textContent = user.email;
-  const users = getUsers();
-  const fullUser = users.find(u => u.id === user.id);
-  if (fullUser?.createdAt) {
-    const d = new Date(fullUser.createdAt);
-    document.getElementById('profileSince').textContent = `Membro desde ${d.toLocaleDateString('pt-BR')}`;
-  }
+  document.getElementById('profileSince').textContent = `Conta conectada na nuvem ☁️`;
 
   go('home');
   rerender();
   syncSettingsUI();
   renderKeyStatuses();
   toast(`👋 Olá, ${user.name.split(' ')[0]}!`);
+
+  // Load cloud data in background and merge
+  const cloudData = await loadFromCloud(user.id);
+  if (cloudData) {
+    const cloudCardIds = new Set((cloudData.cards||[]).map(c=>c.id));
+    const localOnlyCards = (_app.cards||[]).filter(c=>!cloudCardIds.has(c.id));
+    _app.cards = [...(cloudData.cards||[]), ...localOnlyCards];
+    if (cloudData.stats) _app.stats = { ..._app.stats, ...cloudData.stats };
+    if (cloudData.settings) _app.settings = { ..._app.settings, ...cloudData.settings };
+    localStorage.setItem(getDataKey(user.id), JSON.stringify(_app));
+    rerender();
+    syncSettingsUI();
+  }
 }
 
-// On page load: check session
+// On page load: use Firebase Auth state
 window.addEventListener('DOMContentLoaded', () => {
-  const session = getSession();
-  if (session) {
-    const users = getUsers();
-    const user = users.find(u => u.id === session.id);
-    if (user) { launchApp(user); return; }
-  }
-  // Show login
-  document.getElementById('loginScreen').style.display = 'flex';
+  initInteractiveMascot();
+  auth.onAuthStateChanged(async (fbUser) => {
+    if (fbUser) {
+      const user = {
+        id: fbUser.uid,
+        email: fbUser.email,
+        name: fbUser.displayName || fbUser.email.split('@')[0]
+      };
+      setMascotState('loginMascot','state-fire');
+      await launchApp(user);
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
+    }
+  });
 });
 
 // =============================================
@@ -1119,8 +1155,8 @@ const MASCOT_STATES = {
   new:     { state:'state-happy',  mood:'Bem-vindo! 🌟',          text:'Crie seu primeiro deck para começar.' },
   low:     { state:'state-happy',  mood:'Pronto para estudar!',   text:'Cada sessão te aproxima do domínio.' },
   medium:  { state:'state-fire',   mood:'Em chamas! 🔥',          text:'Você está em uma ofensiva incrível!' },
-  high:    { state:'state-fire',   mood:'Lendário! 🏆',           text:'Desempenho nas alturas. Continue!' },
-  worried: { state:'state-worried',mood:'Atenção! ⚠️',           text:'Você tem cards que precisam de revisão.' },
+  high:    { state:'state-fire',   mood:'Lendário! 🏆',           text:'Desempenho nas alturas. Continue!'},
+  worried: { state:'state-worried',mood:'Atenção( ⚠️',           text:'Você tem cards que precisam de revisão.' },
   sad:     { state:'state-sad',    mood:'Não desista! 💙',        text:'Cada erro é uma chance de aprender.' },
 };
 
@@ -1131,7 +1167,7 @@ function getMascotInfo() {
   const cards = _app.cards.length;
   if (!cards) return MASCOT_STATES.new;
   if (streak >= 7 || todayXp >= goal) return MASCOT_STATES.high;
-  if (streak >= 3 || todayXp >= goal * 0.5) return MASCOT_STATES.medium;
+  if (streak >= 3 || todayXp >= goal * 0.5) return MASCOT_STATES-medium;
   const hardCards = _app.cards.filter(c => (c.wrong||0) > (c.correct||0)).length;
   if (hardCards > cards * 0.4) return MASCOT_STATES.worried;
   if (todayXp === 0 && cards > 0) return MASCOT_STATES.sad;
@@ -1156,8 +1192,8 @@ function renderHome() {
   // Trail
   const nodes = [
     { label:'✓', state: pct>=25?'done':(pct>0?'active':'locked') },
-    { label:'★', state: pct>=50?'done':(pct>=25?'active':'locked') },
-    { label:'⚡', state: pct>=75?'done':(pct>=50?'active':'locked') },
+    { label:'✅', state: pct>=50?'done':(pct>=25?'active':'locked') },
+    { label:'➪�', state: pct>=75?'done':(pct>=50?'active':'locked') },
     { label:'🏆', state: pct>=100?'done':(pct>=75?'active':'locked') },
   ];
   document.getElementById('trailNodes').innerHTML = nodes.map((n,i) => `
@@ -1199,7 +1235,7 @@ function deckSummaries() {
 const SUBJECT_ICONS = {'Direito':'⚖️','Medicina':'🩺','Matemática':'📐','História':'📜','Biologia':'🧬','Química':'⚗️','Física':'⚛️','Inglês':'🌍','Programação':'💻','Economia':'💰'};
 function subjectIcon(s) {
   for (const [k,v] of Object.entries(SUBJECT_ICONS)) if (s?.toLowerCase().includes(k.toLowerCase())) return v;
-  return '📖';
+  return '📞';
 }
 function deckCardHTML(d) {
   return `<div class="deck-card" onclick="openDeck('${esc(d.subject)}','${esc(d.topic)}')">
@@ -1723,7 +1759,7 @@ function setProvider(p) {
   document.querySelectorAll('.segment-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
   const sel=document.getElementById('modelSelect');
   sel.innerHTML=(MODELS[p]||[]).map(m=>`<option value="${m}">${m==='local-smart-v1'?'Extração Inteligente Local':m}</option>`).join('');
-  if (!isFree) { sel.value=_app.settings.model||MODELS[p][0]; updateKeyStatus(); }
+  if (!isFree) { const vm=MODELS[p]||[]; sel.value=vm.includes(_app.settings.model)?_app.settings.model:(vm[0]||''); _app.settings.model=sel.value; updateKeyStatus(); }
 }
 
 function syncSettingsUI() {
@@ -1740,7 +1776,7 @@ function syncSettingsUI() {
   if (keySection) keySection.style.display = isFree ? 'none'  : 'block';
 
   if (!isFree) {
-    if (_app.settings.model) sel.value=_app.settings.model;
+    const vm=MODELS[p]||[]; sel.value=vm.includes(_app.settings.model)?_app.settings.model:(vm[0]||''); _app.settings.model=sel.value;
     const keys=loadKeys();
     const activeKey=keys[p]||_app.settings.apiKey||'';
     if (activeKey) { document.getElementById('apiKey').value=activeKey; _app.settings.apiKey=activeKey; }
@@ -1820,6 +1856,76 @@ function showConfetti() {
     wrap.appendChild(p);
   }
   setTimeout(()=>{ wrap.classList.remove('show'); wrap.innerHTML=''; },3500);
+}
+
+// =============================================
+// INTERACTIVE MASCOT
+// =============================================
+function initInteractiveMascot() {
+  const mascot = document.getElementById('loginMascot');
+  if (!mascot) return;
+
+  // Add speech bubble
+  const bubble = document.createElement('div');
+  bubble.className = 'mascot-speech';
+  bubble.id = 'mascotSpeech';
+  mascot.style.position = 'relative';
+  mascot.appendChild(bubble);
+
+  // Add blink overlays to SVG (covers eyes with head color)
+  const svg = mascot.querySelector('.mascot-svg');
+  if (svg) {
+    const ns = 'http://www.w3.org/2000/svg';
+    [{ cx:78, id:'blinkL' }, { cx:122, id:'blinkR' }].forEach(cfg => {
+      const el = document.createElementNS(ns, 'ellipse');
+      el.setAttribute('cx', cfg.cx); el.setAttribute('cy', '76');
+      el.setAttribute('rx', '21'); el.setAttribute('ry', '0');
+      el.setAttribute('fill', '#82d125'); el.setAttribute('id', cfg.id);
+      el.style.transformOrigin = cfg.cx + 'px 76px';
+      svg.appendChild(el);
+    });
+  }
+
+  // Messages shown on click
+  const msgs = ['Vamos lá! 🚀','Você consegue! 💪','Foco total! 🎯','Incrível! ⭐','Olá! 👋','Vai lá! 🔥','Topzera! 😎','Estude com alegria! 📚'];
+  mascot.addEventListener('click', function() {
+    this.classList.remove('bounce');
+    void this.offsetWidth; // force reflow
+    this.classList.add('bounce');
+    setTimeout(() => this.classList.remove('bounce'), 600);
+    const speech = document.getElementById('mascotSpeech');
+    if (speech) {
+      speech.textContent = msgs[Math.floor(Math.random() * msgs.length)];
+      speech.classList.add('show');
+      clearTimeout(speech._t);
+      speech._t = setTimeout(() => speech.classList.remove('show'), 2200);
+    }
+  });
+
+  // Auto blink
+  function doBlink() {
+    const l = document.getElementById('blinkL');
+    const r = document.getElementById('blinkR');
+    if (!l || !r) return;
+    const close = () => { [l,r].forEach(e => { e.style.transition='ry 0.09s ease-in'; e.setAttribute('ry','21'); }); };
+    const open  = () => { [l,r].forEach(e => { e.style.transition='ry 0.12s ease-out'; e.setAttribute('ry','0'); }); };
+    close();
+    setTimeout(open, 100);
+  }
+  function scheduleBlink() {
+    setTimeout(() => { doBlink(); scheduleBlink(); }, 2500 + Math.random() * 3500);
+  }
+  scheduleBlink();
+
+  // Occasional random happy expressions
+  const loginStates = ['state-happy','state-happy','state-happy','state-fire'];
+  function scheduleExpr() {
+    setTimeout(() => {
+      setMascotState('loginMascot', loginStates[Math.floor(Math.random()*loginStates.length)]);
+      scheduleExpr();
+    }, 8000 + Math.random() * 7000);
+  }
+  scheduleExpr();
 }
 
 // =============================================
