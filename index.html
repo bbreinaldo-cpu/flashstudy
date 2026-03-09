@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#070d1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FlashStudy">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Estude com IA — gere flashcards de PDFs e slides automaticamente">
+<title>FlashStudy V6</title>
+
+<!-- PWA Manifest inline -->
+<script>
+(function(){
+  const icon = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23070d1a'/><ellipse cx='256' cy='370' rx='150' ry='155' fill='%236dba1f'/><ellipse cx='256' cy='345' rx='140' ry='140' fill='%2382d125'/><ellipse cx='256' cy='375' rx='90' ry='100' fill='%239de040'/><ellipse cx='105' cy='355' rx='55' ry='90' fill='%235ea818' transform='rotate(-20 105 355)'/><ellipse cx='407' cy='355' rx='55' ry='90' fill='%235ea818' transform='rotate(20 407 355)'/><circle cx='256' cy='195' r='132' fill='%2382d125'/><circle cx='205' cy='188' r='46' fill='white'/><circle cx='307' cy='188' r='46' fill='white'/><circle cx='210' cy='194' r='28' fill='%231a1a2e'/><circle cx='312' cy='194' r='28' fill='%231a1a2e'/><circle cx='222' cy='180' r='12' fill='white'/><circle cx='324' cy='180' r='12' fill='white'/><path d='M225 232 Q256 268 287 232 Q256 242 225 232Z' fill='%23f97316'/><rect x='180' y='500' width='35' height='40' rx='8' fill='%23f97316'/><rect x='297' y='500' width='35' height='40' rx='8' fill='%23f97316'/><rect x='80' y='355' width='148' height='118' rx='18' fill='%23f5f0e0' stroke='%23d4b86a' stroke-width='4'/><text x='154' y='435' text-anchor='middle' fill='%23f97316' font-size='64' font-weight='900' font-family='Arial'>?</text></svg>`);
+  const manifest = {
+    name: "FlashStudy V6",
+    short_name: "FlashStudy",
+    description: "Estude com IA — flashcards de PDFs e slides",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#070d1a",
+    theme_color: "#070d1a",
+    orientation: "portrait",
+    icons: [
+      { src: icon, sizes: "192x192", type: "image/svg+xml" },
+      { src: icon, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest'; link.href = url;
+  document.currentScript.after(link);
+
+  // Apple touch icon
+  const appleLink = document.createElement('link');
+  appleLink.rel = 'apple-touch-icon'; appleLink.href = icon;
+  document.currentScript.after(appleLink);
+})();
+</script>
+
+<!-- Service Worker for offline support -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const swCode = `
+const CACHE = 'flashstudy-v6-cache';
+const URLS = [
+  './',
+  'https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
+];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS).catch(()=>{})));
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+    if (!res || res.status !== 200 || res.type === 'opaque') return res;
+    const clone = res.clone();
+    caches.open(CACHE).then(c => c.put(e.request, clone));
+    return res;
+  }).catch(() => caches.match('./'))));
+});`;
+    const blob = new Blob([swCode], {type:'text/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+  });
+}
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+<style>
+:root {
+  --bg: #070d1a; --panel: #0e1929; --panel2: #132035; --panel3: #182844;
+  --line: rgba(255,255,255,.07); --line2: rgba(255,255,255,.13);
+  --text: #eef2ff; --muted: #7d8fb3;
+  --green: #22c55e; --blue: #38bdf8; --yellow: #fbbf24;
+  --red: #f87171; --purple: #a78bfa; --orange: #fb923c;
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --shadow: 0 16px 40px rgba(0,0,0,.4);
+  --radius: 24px; --radius-sm: 16px; --radius-xs: 10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); font-family: var(--font-body); color: var(--text); overflow: hidden; }
+button, input, select, textarea { font: inherit; }
+
+/* ===== BACKGROUNDS ===== */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 20% -10%, rgba(56,189,248,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 90% 80%, rgba(167,139,250,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 400px 300px at 50% 50%, rgba(34,197,94,.03) 0%, transparent 70%);
+}
+
+/* ===== LOGIN SCREEN ===== */
+#loginScreen, #registerScreen {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; overflow-y: auto;
+}
+#registerScreen { display: none; }
+.auth-wrap {
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+.auth-brand {
+  font-family: var(--font-display); font-size: 36px; font-weight: 900;
+  background: linear-gradient(135deg, #38bdf8, #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  text-align: center; letter-spacing: -1px;
+}
+.auth-tagline { color: var(--muted); font-size: 15px; font-weight: 500; text-align: center; margin-top: -16px; }
+.auth-card {
+  width: 100%; background: var(--panel);
+  border: 1px solid var(--line2); border-radius: 32px;
+  padding: 32px; box-shadow: 0 40px 80px rgba(0,0,0,.6);
+}
+.auth-title { font-family: var(--font-display); font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+.auth-sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+.auth-field { margin-bottom: 14px; }
+.auth-field label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 7px; }
+.auth-input {
+  width: 100%; padding: 14px 16px;
+  background: var(--panel2); border: 1px solid var(--line2);
+  color: var(--text); border-radius: var(--radius-sm);
+  transition: border-color .2s, box-shadow .2s;
+}
+.auth-input:focus { outline: none; border-color: rgba(56,189,248,.4); box-shadow: 0 0 0 3px rgba(56,189,248,.1); }
+.auth-err { color: var(--red); font-size: 13px; font-weight: 600; margin-top: 10px; display: none; }
+.auth-link { color: var(--blue); background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: underline; }
+.auth-footer { color: var(--muted); font-size: 14px; text-align: center; }
+
+/* ===== MASCOT SVG ===== */
+.mascot-container { position: relative; width: 160px; height: 180px; }
+.mascot-svg { width: 160px; height: 180px; filter: drop-shadow(0 12px 24px rgba(0,0,0,.5)); animation: mascotFloat 3s ease-in-out infinite; }
+@keyframes mascotFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+/* Sparkles (happy state) */
+.sparkle { position: absolute; animation: sparkleAnim 1.5s ease-in-out infinite; opacity: 0; }
+.sparkle:nth-child(1) { top: 10px; left: 10px; animation-delay: 0s; }
+.sparkle:nth-child(2) { top: 0; right: 20px; animation-delay: 0.4s; }
+.sparkle:nth-child(3) { top: 20px; right: 5px; animation-delay: 0.8s; }
+@keyframes sparkleAnim { 0%,100%{opacity:0;transform:scale(0.5) rotate(0deg)} 50%{opacity:1;transform:scale(1) rotate(180deg)} }
+
+/* Fire (excited state) */
+.flame { position: absolute; bottom: 10px; animation: flameAnim 0.6s ease-in-out infinite alternate; display: none; }
+.flame:nth-child(4) { left: 15px; animation-delay: 0s; }
+.flame:nth-child(5) { left: 50px; animation-delay: 0.15s; }
+.flame:nth-child(6) { right: 20px; animation-delay: 0.3s; }
+@keyframes flameAnim { from{transform:scaleY(1) translateY(0)} to{transform:scaleY(1.3) translateY(-5px)} }
+
+/* Warning (worried state) */
+.warning-icon { position: absolute; top: 5px; left: -5px; display: none; animation: wobble 0.5s ease-in-out infinite alternate; }
+@keyframes wobble { from{transform:rotate(-5deg)} to{transform:rotate(5deg)} }
+
+/* Tears (sad state) */
+.tear { position: absolute; width: 6px; height: 10px; background: #60a5fa; border-radius: 50% 50% 50% 0; display: none; animation: tearFall 0.8s linear infinite; }
+.tear:nth-child(8) { top: 95px; left: 58px; animation-delay: 0s; }
+.tear:nth-child(9) { top: 95px; right: 55px; animation-delay: 0.3s; }
+@keyframes tearFall { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(20px)} }
+
+/* State toggling */
+.mascot-container.state-happy .sparkle { opacity: 1; }
+.mascot-container.state-happy .sparkle { animation: sparkleAnim 1.5s ease-in-out infinite; }
+.mascot-container.state-fire .flame { display: block; }
+.mascot-container.state-fire .mascot-svg { filter: drop-shadow(0 0 20px rgba(251,146,60,.6)) drop-shadow(0 12px 24px rgba(0,0,0,.5)); }
+.mascot-container.state-worried .warning-icon { display: block; }
+.mascot-container.state-worried .mascot-svg { filter: drop-shadow(0 12px 24px rgba(0,0,0,.5)) saturate(0.7); }
+.mascot-container.state-sad .tear { display: block; }
+.mascot-container.state-sad .mascot-svg { filter: drop-shadow(0 12px 24px rgba(0,0,0,.5)) saturate(0.5) brightness(0.85); }
+
+/* ===== APP ===== */
+#app { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; display: none; }
+
+/* ===== TOPBAR ===== */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 12px;
+  background: rgba(7,13,26,.92); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { font-family: var(--font-display); font-size: 24px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.top-actions { display: flex; gap: 8px; align-items: center; }
+.chip { padding: 7px 12px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line2); font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; transition: background .3s; }
+
+/* ===== SCREENS ===== */
+.screen { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 20px 120px; display: none; scroll-behavior: smooth; }
+.screen.active { display: block; animation: fadeUp .22s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* ===== HERO ===== */
+.hero { background: linear-gradient(135deg, #0e1f3d 0%, #071224 60%, #0a0e1a 100%); border: 1px solid rgba(56,189,248,.12); border-radius: 32px; padding: 24px; box-shadow: var(--shadow); position: relative; overflow: hidden; margin-bottom: 20px; }
+.hero-title { font-family: var(--font-display); font-size: 32px; font-weight: 900; line-height: 1.05; margin-bottom: 10px; background: linear-gradient(135deg, #fff 30%, var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-sub { color: var(--muted); font-size: 14px; font-weight: 500; margin-bottom: 18px; max-width: 46ch; line-height: 1.55; }
+.cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ===== BUTTONS ===== */
+.btn { border: none; border-radius: var(--radius-sm); padding: 13px 18px; font-family: var(--font-body); font-weight: 700; font-size: 14px; cursor: pointer; transition: transform .15s, filter .15s; position: relative; overflow: hidden; white-space: nowrap; }
+.btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.1) 0%, transparent 60%); pointer-events: none; }
+.btn:active { transform: scale(.97) translateY(1px); }
+.btn:hover { filter: brightness(1.1); }
+.btn-green { background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; box-shadow: 0 4px 14px rgba(34,197,94,.3); }
+.btn-blue { background: linear-gradient(135deg, #0284c7, #38bdf8); color: #fff; box-shadow: 0 4px 14px rgba(56,189,248,.3); }
+.btn-purple { background: linear-gradient(135deg, #7c3aed, #a78bfa); color: #fff; box-shadow: 0 4px 14px rgba(167,139,250,.3); }
+.btn-dark { background: var(--panel2); color: var(--text); border: 1px solid var(--line2); }
+.btn-red { background: linear-gradient(135deg, #dc2626, #f87171); color: #fff; }
+.btn-sm { padding: 9px 13px; font-size: 13px; border-radius: var(--radius-xs); }
+.btn-icon { padding: 10px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+.btn-full { width: 100%; padding: 15px; font-size: 16px; border-radius: var(--radius-sm); }
+
+/* ===== KPI ===== */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); transition: transform .2s; }
+.kpi:hover { transform: translateY(-2px); }
+.kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.kpi-value { font-family: var(--font-display); font-size: 32px; font-weight: 900; margin-top: 6px; }
+.kpi.green { color: var(--green); } .kpi.blue { color: var(--blue); } .kpi.yellow { color: var(--yellow); } .kpi.purple { color: var(--purple); }
+
+/* ===== SEC TITLE ===== */
+.sec-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }
+.sec-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+/* ===== DECK CARDS ===== */
+.deck-grid { display: grid; gap: 12px; }
+.deck-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform .2s, border-color .2s; box-shadow: var(--shadow); }
+.deck-card:hover { transform: translateY(-2px); border-color: rgba(56,189,248,.25); }
+.deck-icon { width: 50px; height: 50px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; background: linear-gradient(135deg, var(--panel2), var(--panel3)); border: 1px solid var(--line2); }
+.deck-info { flex: 1; min-width: 0; }
+.deck-name { font-family: var(--font-display); font-size: 17px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.deck-meta { font-size: 13px; color: var(--muted); font-weight: 500; }
+.deck-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ===== PROGRESS ===== */
+.progress { height: 10px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); overflow: hidden; margin-top: 10px; }
+.progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--green), #4ade80); border-radius: 999px; transition: width .4s cubic-bezier(.34,1.56,.64,1); }
+
+/* ===== TRAIL ===== */
+.trail-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+.trail-nodes { display: flex; align-items: center; gap: 0; margin: 16px 0; overflow-x: auto; padding: 8px 0; }
+.trail-node { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; flex-shrink: 0; transition: transform .2s; }
+.trail-node.done { background: linear-gradient(135deg, #16a34a, #22c55e); border: 3px solid #4ade80; box-shadow: 0 0 20px rgba(34,197,94,.4); }
+.trail-node.active { background: linear-gradient(135deg, #d97706, #fbbf24); border: 3px solid #fde68a; box-shadow: 0 0 20px rgba(251,191,36,.4); color: #78350f; }
+.trail-node.locked { background: var(--panel2); border: 3px solid var(--line2); color: var(--muted); opacity: .6; }
+.trail-connector { flex: 1; height: 4px; background: var(--panel2); border-radius: 999px; min-width: 20px; }
+.trail-connector.done { background: linear-gradient(90deg, #22c55e, #4ade80); }
+
+/* ===== MASCOT WRAP (in-app) ===== */
+.mascot-wrap { background: linear-gradient(135deg, #0e2040, #071224); border: 1px solid rgba(56,189,248,.12); border-radius: var(--radius); padding: 20px; display: flex; gap: 16px; align-items: center; margin-top: 16px; }
+.mascot-wrap .mascot-container { width: 90px; height: 100px; flex-shrink: 0; }
+.mascot-wrap .mascot-svg { width: 90px; height: 100px; }
+.mascot-wrap .mascot-container { animation: mascotFloat 3s ease-in-out infinite; }
+.mascot-mood { font-family: var(--font-display); font-size: 18px; font-weight: 900; }
+.mascot-text { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+/* ===== STUDY CARD ===== */
+.study-card { background: var(--panel); border: 1px solid var(--line); border-radius: 32px; padding: 28px; box-shadow: var(--shadow); min-height: 320px; display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; }
+.card-top { display: flex; justify-content: space-between; align-items: center; }
+.card-badge { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--panel2); border: 1px solid var(--line2); color: var(--muted); }
+.card-badge.easy { color: var(--green); border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.08); }
+.card-badge.medium { color: var(--yellow); border-color: rgba(251,191,36,.25); background: rgba(251,191,36,.08); }
+.card-badge.hard { color: var(--red); border-color: rgba(248,113,113,.25); background: rgba(248,113,113,.08); }
+.card-question { font-family: var(--font-display); font-size: 24px; font-weight: 800; line-height: 1.3; flex: 1; display: flex; align-items: center; }
+.card-answer { font-size: 16px; line-height: 1.7; color: #a7f3c0; background: rgba(34,197,94,.07); padding: 18px; border-radius: 18px; border: 1px solid rgba(34,197,94,.15); animation: fadeUp .2s ease; }
+.card-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.card-progress-bar { height: 6px; background: var(--panel2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+
+/* ===== AI STUDIO ===== */
+.ai-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+.segment { display: flex; gap: 6px; padding: 6px; background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius-sm); overflow-x: auto; margin-bottom: 20px; }
+.segment-btn { border: none; background: transparent; color: var(--muted); padding: 10px 16px; border-radius: var(--radius-xs); font-weight: 700; font-size: 14px; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.segment-btn.active { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; box-shadow: 0 4px 14px rgba(56,189,248,.3); }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+.input, .textarea, .select { width: 100%; padding: 13px 15px; background: var(--panel2); border: 1px solid var(--line2); color: var(--text); border-radius: var(--radius-sm); transition: border-color .2s, box-shadow .2s; -webkit-appearance: none; }
+.input:focus, .textarea:focus, .select:focus { outline: none; border-color: rgba(56,189,248,.4); box-shadow: 0 0 0 3px rgba(56,189,248,.1); }
+.textarea { min-height: 130px; resize: vertical; line-height: 1.65; }
+.select option { background: var(--panel2); }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.notice { padding: 13px 15px; border-radius: var(--radius-sm); background: rgba(56,189,248,.07); border: 1px solid rgba(56,189,248,.2); color: #bae6fd; font-size: 13px; font-weight: 500; line-height: 1.6; margin: 14px 0; }
+
+/* ===== DROPZONE ===== */
+.dropzone { border: 2px dashed var(--line2); border-radius: var(--radius-sm); padding: 30px 20px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(56,189,248,.03); position: relative; overflow: hidden; }
+.dropzone:hover, .dropzone.drag { border-color: var(--blue); background: rgba(56,189,248,.08); }
+.dropzone.loading { border-color: var(--purple); background: rgba(167,139,250,.08); }
+.dropzone-icon { font-size: 38px; margin-bottom: 10px; display: block; }
+.dropzone-text { font-size: 15px; font-weight: 700; }
+.dropzone-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.dropzone .progress-line { position: absolute; bottom: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--blue), var(--purple)); border-radius: 999px; transition: width .3s ease; }
+
+/* ===== STATS ===== */
+.stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+
+/* ===== CONFIG ===== */
+.config-section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.config-title { font-family: var(--font-display); font-size: 17px; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+/* ===== NAVBAR ===== */
+.navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(7,13,26,.96); backdrop-filter: blur(20px); border-top: 1px solid var(--line); padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 6px; justify-content: space-around; }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 8px; background: transparent; border: none; border-radius: 16px; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 700; transition: all .2s; }
+.nav-btn.active { background: var(--panel2); color: var(--text); }
+.nav-btn .nav-icon { font-size: 21px; transition: transform .2s; }
+.nav-btn.active .nav-icon { transform: scale(1.15); }
+
+/* ===== TOAST ===== */
+.toast { position: fixed; bottom: 100px; left: 50%; z-index: 1000; transform: translateX(-50%) translateY(20px); background: var(--panel2); border: 1px solid var(--line2); padding: 11px 20px; border-radius: 999px; font-weight: 700; font-size: 14px; opacity: 0; transition: all .25s; white-space: nowrap; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ===== MODAL ===== */
+.modal-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.7); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.active { display: flex; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal { background: var(--panel); border: 1px solid var(--line2); border-radius: 32px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 40px 80px rgba(0,0,0,.6); animation: slideUp .3s cubic-bezier(.34,1.56,.64,1); }
+@keyframes slideUp { from{transform:translateY(40px) scale(.95);opacity:0} to{transform:none;opacity:1} }
+.modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+.modal-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+.modal-close { float: right; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; margin-top: -4px; }
+.share-url { background: var(--panel2); border: 1px solid var(--line2); border-radius: var(--radius-xs); padding: 12px 14px; font-size: 13px; color: var(--blue); word-break: break-all; margin: 14px 0; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 15px; font-weight: 500; }
+.empty-state .empty-icon { font-size: 52px; margin-bottom: 14px; }
+.empty-state p { margin-top: 8px; }
+
+/* ===== SEARCH ===== */
+.search-wrap { display: flex; gap: 10px; margin-bottom: 16px; }
+.search-wrap .input { flex: 1; }
+
+/* ===== SPINNER ===== */
+.spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line2); border-top-color: var(--blue); animation: spin .7s linear infinite; display: inline-block; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ===== CONFETTI ===== */
+.confetti-wrap { position: fixed; inset: 0; z-index: 600; pointer-events: none; display: none; }
+.confetti-wrap.show { display: block; }
+.confetti-piece { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall 2.5s ease-in forwards; }
+@keyframes confettiFall { from{transform:translateY(-20px) rotate(0deg);opacity:1} to{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+/* ===== USER PROFILE PILL ===== */
+.user-pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--panel2); border: 1px solid var(--line2); border-radius: 999px; cursor: pointer; }
+.user-avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: white; flex-shrink: 0; }
+.user-name { font-size: 12px; font-weight: 700; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== STREAK ===== */
+.streak-fire { animation: pulse 1s ease-in-out infinite alternate; }
+@keyframes pulse { from{filter:brightness(1)} to{filter:brightness(1.3) drop-shadow(0 0 6px #f97316)} }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .row-2 { grid-template-columns: 1fr; }
+  .hero-title { font-size: 26px; }
+  .card-question { font-size: 20px; }
+  .auth-brand { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN SCREEN ===================== -->
+<div id="loginScreen">
+  <div class="auth-wrap">
+    <div class="auth-brand">Flash<span style="background:linear-gradient(135deg,#22c55e,#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Study</span> <span style="font-size:16px;-webkit-text-fill-color:var(--muted);color:var(--muted)">V6</span></div>
+    <div class="auth-tagline">Seu parceiro de estudos com IA</div>
+
+    <!-- MASCOT -->
+    <div class="mascot-container state-happy" id="loginMascot">
+      <svg class="mascot-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shadow -->
+        <ellipse cx="100" cy="215" rx="55" ry="8" fill="rgba(0,0,0,0.3)"/>
+        <!-- Body -->
+        <ellipse cx="100" cy="155" rx="62" ry="65" fill="#6dba1f"/>
+        <ellipse cx="100" cy="145" rx="58" ry="58" fill="#82d125"/>
+        <!-- Belly (lighter) -->
+        <ellipse cx="100" cy="158" rx="38" ry="42" fill="#9de040"/>
+        <!-- Wings -->
+        <ellipse cx="42" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(-20 42 148)"/>
+        <ellipse cx="158" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(20 158 148)"/>
+        <!-- Wing shine -->
+        <ellipse cx="38" cy="138" rx="10" ry="18" fill="#73c41e" opacity="0.5" transform="rotate(-20 38 138)"/>
+        <ellipse cx="162" cy="138" rx="10" ry="18" fill="#73c41e" opacity="0.5" transform="rotate(20 162 138)"/>
+        <!-- Head -->
+        <circle cx="100" cy="80" r="56" fill="#82d125"/>
+        <!-- Head top tuft -->
+        <ellipse cx="92" cy="28" rx="10" ry="18" fill="#6dba1f" transform="rotate(-15 92 28)"/>
+        <ellipse cx="100" cy="24" rx="8" ry="16" fill="#82d125" transform="rotate(0 100 24)"/>
+        <ellipse cx="108" cy="30" rx="7" ry="14" fill="#6dba1f" transform="rotate(15 108 30)"/>
+        <!-- Head shine -->
+        <ellipse cx="78" cy="60" rx="18" ry="12" fill="#9de040" opacity="0.4" transform="rotate(-20 78 60)"/>
+        <!-- Eyes white -->
+        <circle cx="78" cy="76" r="20" fill="white"/>
+        <circle cx="122" cy="76" r="20" fill="white"/>
+        <!-- Eye shadow -->
+        <circle cx="78" cy="78" r="17" fill="#f0f0f0"/>
+        <circle cx="122" cy="78" r="17" fill="#f0f0f0"/>
+        <!-- Pupils -->
+        <circle cx="80" cy="78" r="12" fill="#1a1a2e"/>
+        <circle cx="124" cy="78" r="12" fill="#1a1a2e"/>
+        <!-- Eye shine 1 -->
+        <circle cx="85" cy="72" r="5" fill="white"/>
+        <circle cx="129" cy="72" r="5" fill="white"/>
+        <!-- Eye shine 2 (small) -->
+        <circle cx="77" cy="81" r="2.5" fill="white" opacity="0.7"/>
+        <circle cx="121" cy="81" r="2.5" fill="white" opacity="0.7"/>
+        <!-- Beak -->
+        <path d="M 88 94 Q 100 110 112 94 Q 100 98 88 94 Z" fill="#f97316"/>
+        <path d="M 90 93 Q 100 100 110 93" fill="none" stroke="#ea6b00" stroke-width="1.5"/>
+        <!-- Feet/Claws -->
+        <rect x="72" y="210" width="14" height="16" rx="4" fill="#f97316"/>
+        <rect x="114" y="210" width="14" height="16" rx="4" fill="#f97316"/>
+        <rect x="64" y="218" width="10" height="8" rx="3" fill="#f97316"/>
+        <rect x="86" y="220" width="10" height="8" rx="3" fill="#f97316"/>
+        <rect x="106" y="220" width="10" height="8" rx="3" fill="#f97316"/>
+        <rect x="128" y="218" width="10" height="8" rx="3" fill="#f97316"/>
+        <!-- Card held by left wing -->
+        <rect x="30" y="145" width="60" height="50" rx="8" fill="#f5f0e0" stroke="#d4b86a" stroke-width="2"/>
+        <rect x="30" y="145" width="60" height="14" rx="8" fill="#e8ddc0"/>
+        <rect x="34" y="193" width="52" height="2" rx="1" fill="#c4a84a"/>
+        <!-- Question mark on card -->
+        <text x="60" y="182" text-anchor="middle" fill="#f97316" font-size="26" font-weight="900" font-family="Arial">?</text>
+        <!-- Small dot under Q mark -->
+        <circle cx="60" cy="188" r="3" fill="#f97316"/>
+        <!-- Card line detail -->
+        <rect x="36" y="171" width="48" height="2" rx="1" fill="#ddd" opacity="0.5"/>
+        <!-- Second card peeking -->
+        <rect x="110" y="148" width="55" height="45" rx="8" fill="#e8f4ff" stroke="#90c4f0" stroke-width="2" transform="rotate(8 137 170)"/>
+        <!-- Pink card peeking (third) -->
+        <rect x="38" y="140" width="52" height="42" rx="8" fill="#ffe8f0" stroke="#f0a0c0" stroke-width="2" transform="rotate(-8 64 161)"/>
+      </svg>
+      <!-- Sparkles -->
+      <div class="sparkle" style="top:8px;left:8px;font-size:18px">✨</div>
+      <div class="sparkle" style="top:2px;right:22px;font-size:14px">⭐</div>
+      <div class="sparkle" style="top:22px;right:2px;font-size:16px">✨</div>
+      <!-- Flames (hidden by default) -->
+      <div class="flame" style="font-size:28px;left:10px">🔥</div>
+      <div class="flame" style="font-size:24px;left:55px">🔥</div>
+      <div class="flame" style="font-size:26px;right:15px">🔥</div>
+      <!-- Warning -->
+      <div class="warning-icon" style="font-size:24px">⚠️</div>
+      <!-- Tears -->
+      <div class="tear" style="top:95px;left:60px"></div>
+      <div class="tear" style="top:95px;right:58px"></div>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-title">Bem-vindo de volta!</div>
+      <div class="auth-sub">Entre com sua conta para continuar seus estudos</div>
+
+      <div class="auth-field">
+        <label>E-mail</label>
+        <input class="auth-input" type="email" id="loginEmail" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Senha</label>
+        <div style="position:relative">
+          <input class="auth-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px" onkeydown="if(event.key==='Enter')doLogin()">
+          <button onclick="togglePwd('loginPass',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">👁</button>
+        </div>
+      </div>
+      <div class="auth-err" id="loginErr"></div>
+      <button class="btn btn-green btn-full" style="margin-top:8px" onclick="doLogin()">Entrar</button>
+      <div class="auth-footer" style="margin-top:16px">
+        Não tem conta? <button class="auth-link" onclick="switchToRegister()">Criar conta grátis</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== REGISTER SCREEN ===================== -->
+<div id="registerScreen">
+  <div class="auth-wrap">
+    <div class="auth-brand">Flash<span style="background:linear-gradient(135deg,#22c55e,#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Study</span> <span style="font-size:16px;-webkit-text-fill-color:var(--muted);color:var(--muted)">V6</span></div>
+    <div class="auth-tagline">Crie sua conta gratuitamente</div>
+
+    <!-- MASCOT REGISTER (happy state) -->
+    <div class="mascot-container state-happy" style="width:120px;height:135px">
+      <svg class="mascot-svg" viewBox="0 0 200 220" style="width:120px;height:135px" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="100" cy="215" rx="55" ry="8" fill="rgba(0,0,0,0.3)"/>
+        <ellipse cx="100" cy="155" rx="62" ry="65" fill="#6dba1f"/><ellipse cx="100" cy="145" rx="58" ry="58" fill="#82d125"/>
+        <ellipse cx="100" cy="158" rx="38" ry="42" fill="#9de040"/>
+        <ellipse cx="42" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(-20 42 148)"/>
+        <ellipse cx="158" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(20 158 148)"/>
+        <circle cx="100" cy="80" r="56" fill="#82d125"/>
+        <ellipse cx="100" cy="24" rx="8" ry="16" fill="#82d125"/>
+        <circle cx="78" cy="76" r="20" fill="white"/><circle cx="122" cy="76" r="20" fill="white"/>
+        <circle cx="80" cy="78" r="12" fill="#1a1a2e"/><circle cx="124" cy="78" r="12" fill="#1a1a2e"/>
+        <circle cx="85" cy="72" r="5" fill="white"/><circle cx="129" cy="72" r="5" fill="white"/>
+        <path d="M 88 94 Q 100 110 112 94 Q 100 98 88 94 Z" fill="#f97316"/>
+        <rect x="72" y="210" width="14" height="16" rx="4" fill="#f97316"/>
+        <rect x="114" y="210" width="14" height="16" rx="4" fill="#f97316"/>
+        <rect x="30" y="145" width="60" height="50" rx="8" fill="#f5f0e0" stroke="#d4b86a" stroke-width="2"/>
+        <text x="60" y="182" text-anchor="middle" fill="#f97316" font-size="26" font-weight="900" font-family="Arial">?</text>
+      </svg>
+      <div class="sparkle" style="top:5px;left:5px;font-size:14px">✨</div>
+      <div class="sparkle" style="top:0;right:15px;font-size:12px">⭐</div>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-title">Criar conta</div>
+      <div class="auth-sub">Seus dados ficam salvos por usuário, com segurança</div>
+
+      <div class="auth-field">
+        <label>Nome</label>
+        <input class="auth-input" type="text" id="regName" placeholder="Como posso te chamar?">
+      </div>
+      <div class="auth-field">
+        <label>E-mail</label>
+        <input class="auth-input" type="email" id="regEmail" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Senha</label>
+        <div style="position:relative">
+          <input class="auth-input" type="password" id="regPass" placeholder="Mínimo 6 caracteres" style="padding-right:44px" onkeydown="if(event.key==='Enter')doRegister()">
+          <button onclick="togglePwd('regPass',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">👁</button>
+        </div>
+      </div>
+      <div class="auth-err" id="regErr"></div>
+      <button class="btn btn-blue btn-full" style="margin-top:8px" onclick="doRegister()">Criar conta</button>
+      <div class="auth-footer" style="margin-top:16px">
+        Já tem conta? <button class="auth-link" onclick="switchToLogin()">Entrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">Flash<span style="color:var(--green);-webkit-text-fill-color:var(--green);">Study</span> <span style="font-size:13px;font-weight:700;color:var(--muted);-webkit-text-fill-color:var(--muted);">V6</span></div>
+    <div class="top-actions">
+      <div class="chip"><span class="streak-fire">🔥</span> <strong id="streakChip">0</strong></div>
+      <div class="chip">⭐ <strong id="xpChip">0</strong></div>
+      <div class="user-pill" onclick="go('config')">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span class="user-name" id="userNameChip">Usuário</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <main id="home" class="screen active">
+    <div class="hero">
+      <h1 class="hero-title">Continue sua jornada!</h1>
+      <p class="hero-sub">IA extrai flashcards de PDFs e slides. Estude em qualquer lugar — seus dados são seus.</p>
+      <div class="cta-row">
+        <button class="btn btn-green" onclick="startStudy()">▶ Estudar agora</button>
+        <button class="btn btn-blue" onclick="go('create')">✨ Gerar com IA</button>
+        <button class="btn btn-dark" onclick="go('library')">📚 Biblioteca</button>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="kpi-label">Cards</div><div class="kpi-value" id="kpiCards">0</div></div>
+      <div class="kpi blue"><div class="kpi-label">XP hoje</div><div class="kpi-value" id="kpiTodayXp">0</div></div>
+      <div class="kpi yellow"><div class="kpi-label">Ofensiva</div><div class="kpi-value" id="kpiStreak">0</div></div>
+      <div class="kpi purple"><div class="kpi-label">Matérias</div><div class="kpi-value" id="kpiSubjects">0</div></div>
+    </div>
+    <div class="sec-title">Missão do dia</div>
+    <div class="trail-wrap">
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:900">Trilha de aprendizado</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:4px">Complete cada nó para avançar</div>
+      <div class="trail-nodes" id="trailNodes"></div>
+      <div class="progress"><span id="dailyProgress" style="width:0%"></span></div>
+      <div style="color:var(--muted);font-size:13px;font-weight:600;margin-top:8px" id="dailyText">0/20 XP hoje</div>
+    </div>
+    <div id="mascotWrap" class="mascot-wrap">
+      <div class="mascot-container" id="appMascotContainer">
+        <svg class="mascot-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="100" cy="215" rx="55" ry="8" fill="rgba(0,0,0,0.3)"/>
+          <ellipse cx="100" cy="155" rx="62" ry="65" fill="#6dba1f"/><ellipse cx="100" cy="145" rx="58" ry="58" fill="#82d125"/>
+          <ellipse cx="100" cy="158" rx="38" ry="42" fill="#9de040"/>
+          <ellipse cx="42" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(-20 42 148)"/>
+          <ellipse cx="158" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(20 158 148)"/>
+          <circle cx="100" cy="80" r="56" fill="#82d125"/>
+          <ellipse cx="92" cy="28" rx="10" ry="18" fill="#6dba1f" transform="rotate(-15 92 28)"/>
+          <ellipse cx="100" cy="24" rx="8" ry="16" fill="#82d125"/>
+          <ellipse cx="108" cy="30" rx="7" ry="14" fill="#6dba1f" transform="rotate(15 108 30)"/>
+          <circle cx="78" cy="76" r="20" fill="white"/><circle cx="122" cy="76" r="20" fill="white"/>
+          <circle cx="80" cy="78" r="12" fill="#1a1a2e"/><circle cx="124" cy="78" r="12" fill="#1a1a2e"/>
+          <circle cx="85" cy="72" r="5" fill="white"/><circle cx="129" cy="72" r="5" fill="white"/>
+          <path d="M 88 94 Q 100 110 112 94 Q 100 98 88 94 Z" fill="#f97316"/>
+          <rect x="72" cy="210" width="14" height="16" rx="4" fill="#f97316"/>
+          <rect x="72" y="210" width="14" height="16" rx="4" fill="#f97316"/>
+          <rect x="114" y="210" width="14" height="16" rx="4" fill="#f97316"/>
+          <rect x="30" y="145" width="60" height="50" rx="8" fill="#f5f0e0" stroke="#d4b86a" stroke-width="2"/>
+          <text x="60" y="182" text-anchor="middle" fill="#f97316" font-size="26" font-weight="900" font-family="Arial">?</text>
+          <circle cx="60" cy="188" r="3" fill="#f97316"/>
+          <rect x="110" y="148" width="55" height="45" rx="8" fill="#e8f4ff" stroke="#90c4f0" stroke-width="2" transform="rotate(8 137 170)"/>
+        </svg>
+        <div class="sparkle" style="top:5px;left:2px;font-size:12px">✨</div>
+        <div class="sparkle" style="top:0;right:10px;font-size:10px">⭐</div>
+        <div class="flame" style="font-size:20px;left:5px">🔥</div>
+        <div class="flame" style="font-size:18px;left:35px">🔥</div>
+        <div class="flame" style="font-size:19px;right:8px">🔥</div>
+        <div class="warning-icon" style="font-size:18px">⚠️</div>
+        <div class="tear" style="top:60px;left:38px"></div>
+        <div class="tear" style="top:60px;right:35px"></div>
+      </div>
+      <div>
+        <div class="mascot-mood" id="mascotMood">Pronto para estudar!</div>
+        <div class="mascot-text" id="mascotText">Seu progresso é salvo automaticamente.</div>
+      </div>
+    </div>
+    <div class="sec-title">Seus decks</div>
+    <div id="homeDecks" class="deck-grid"></div>
+  </main>
+
+  <!-- LIBRARY -->
+  <main id="library" class="screen">
+    <div class="sec-title">Biblioteca</div>
+    <div class="search-wrap">
+      <input class="input" id="searchInput" placeholder="🔍 Buscar matéria, tema..." oninput="renderLibrary()">
+      <button class="btn btn-blue btn-sm" onclick="go('create')">+ Criar</button>
+    </div>
+    <div id="libraryDecks" class="deck-grid"></div>
+    <div class="sec-title">Todos os cards</div>
+    <div id="libraryCards" class="deck-grid"></div>
+  </main>
+
+  <!-- STUDY -->
+  <main id="study" class="screen">
+    <div class="sec-title">Sessão de estudo</div>
+    <div id="studyWrap"></div>
+  </main>
+
+  <!-- CREATE / AI STUDIO -->
+  <main id="create" class="screen">
+    <div class="sec-title">Estúdio IA</div>
+    <div class="ai-card">
+
+      <!-- FREE MODE BANNER (shown when no key saved) -->
+      <div id="freeModeHint" style="display:none;margin-bottom:16px;padding:14px 16px;border-radius:16px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);color:#fde68a;font-size:13px;line-height:1.6">
+        <strong style="color:#fbbf24">💡 Sem chave de API?</strong> Use o <strong>Modo Gratuito</strong> (tab abaixo) — gera flashcards direto do texto, sem internet extra. Ou obtenha uma chave grátis do Gemini em
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);font-weight:700">aistudio.google.com</a> e salve em Configurações.
+      </div>
+
+      <div class="segment" id="providerSegment">
+        <button class="segment-btn" data-p="free" onclick="setProvider('free')" style="color:#fbbf24">🆓 Grátis</button>
+        <button class="segment-btn active" data-p="gemini" onclick="setProvider('gemini')">💎 Gemini</button>
+        <button class="segment-btn" data-p="claude" onclick="setProvider('claude')">🤖 Claude</button>
+        <button class="segment-btn" data-p="openai" onclick="setProvider('openai')">✨ OpenAI</button>
+      </div>
+
+      <!-- FREE MODE INFO -->
+      <div id="freeModeInfo" style="display:none;margin-bottom:16px;padding:16px;border-radius:16px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2)">
+        <div style="font-weight:800;font-size:15px;color:var(--green);margin-bottom:6px">🆓 Modo Gratuito — sem chave de API</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.65">
+          Usa processamento inteligente local para extrair flashcards do seu texto — funciona <strong style="color:var(--text)">100% offline, sem nenhuma chave</strong>.<br>
+          Detecta definições, listas, conceitos e termos-chave automaticamente.<br>
+          <span style="color:#fbbf24">⚡ Dica:</span> Quanto mais estruturado o texto (tópicos, definições, listas), melhores os resultados.
+        </div>
+      </div>
+
+      <!-- API KEY SECTION (hidden in free mode) -->
+      <div id="apiKeySection">
+        <div id="apiKeyBanner" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:14px;background:rgba(34,197,94,.09);border:1px solid rgba(34,197,94,.25);color:#86efac;font-size:13px;font-weight:700;align-items:center;gap:10px">
+          <span>🔑</span><span id="apiKeyBannerText">Chave salva</span>
+          <button onclick="go('config')" style="margin-left:auto;background:none;border:none;color:var(--blue);font-size:13px;font-weight:700;cursor:pointer">Gerenciar →</button>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label>Chave da API <span id="keyStatusDot"></span></label>
+            <div style="position:relative">
+              <input id="apiKey" class="input" type="password" placeholder="Cole aqui ou salve em ⚙️ Config" oninput="saveSetting('apiKey',this.value);updateKeyStatus()" style="padding-right:44px">
+              <button onclick="toggleKeyVisible()" id="keyEyeBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">👁</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:5px">🔒 Salva automaticamente para sua conta neste dispositivo</div>
+          </div>
+          <div class="field">
+            <label>Modelo</label>
+            <select id="modelSelect" class="select" onchange="saveSetting('model',this.value)"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field"><label>Matéria</label><input id="subjectInput" class="input" placeholder="Ex.: Direito Empresarial"></div>
+        <div class="field"><label>Tema</label><input id="topicInput" class="input" placeholder="Ex.: Títulos de Crédito"></div>
+      </div>
+      <div class="field">
+        <label>Quantidade de flashcards</label>
+        <input id="countInput" class="input" type="number" min="3" max="40" value="10" style="max-width:140px">
+      </div>
+      <div class="field">
+        <label>Arquivo PDF ou PPTX</label>
+        <div class="dropzone" id="dropzone" ondragover="dzDrag(event,true)" ondragleave="dzDrag(event,false)" ondrop="dzDrop(event)">
+          <span class="dropzone-icon" id="dzIcon">📂</span>
+          <div class="dropzone-text" id="dzText">Arraste ou toque para selecionar</div>
+          <div class="dropzone-sub" id="dzSub">PDF, PPTX, TXT • Extração automática</div>
+          <div class="progress-line" id="dzProgress" style="width:0%"></div>
+          <input type="file" id="fileInput" accept=".pdf,.pptx,.txt,.md" onchange="handleFileSelect()">
+        </div>
+      </div>
+      <div class="notice" id="extractNotice" style="display:none"></div>
+      <div class="field">
+        <label>Conteúdo extraído / cole texto</label>
+        <textarea id="sourceText" class="textarea" placeholder="O texto aparecerá aqui após extração. Você também pode colar diretamente."></textarea>
+      </div>
+      <div class="cta-row" style="margin-top:8px">
+        <button class="btn btn-green" onclick="generateCards()" id="generateBtn">✨ Gerar flashcards</button>
+        <button class="btn btn-dark btn-sm" onclick="clearComposer()">🗑 Limpar</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- STATS -->
+  <main id="stats" class="screen">
+    <div class="sec-title">Desempenho</div>
+    <div class="stats-grid">
+      <div class="kpi green"><div class="kpi-label">XP total</div><div class="kpi-value" id="statXp">0</div></div>
+      <div class="kpi yellow"><div class="kpi-label">Ofensiva</div><div class="kpi-value" id="statStreak">0</div></div>
+      <div class="kpi blue"><div class="kpi-label">Acertos</div><div class="kpi-value" id="statCorrect">0</div></div>
+      <div class="kpi" style="color:var(--red)"><div class="kpi-label">Erros</div><div class="kpi-value" id="statWrong">0</div></div>
+      <div class="kpi purple"><div class="kpi-label">Nível</div><div class="kpi-value" id="statLevel">1</div></div>
+      <div class="kpi blue"><div class="kpi-label">Meta diária</div><div class="kpi-value" id="statGoal">20</div></div>
+    </div>
+    <div class="sec-title">Por matéria</div>
+    <div id="subjectStats" class="deck-grid"></div>
+  </main>
+
+  <!-- CONFIG -->
+  <main id="config" class="screen">
+    <div class="sec-title">Configurações</div>
+
+    <!-- User Profile -->
+    <div class="config-section">
+      <div class="config-title">👤 Minha conta</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+        <div id="profileAvatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:white;flex-shrink:0"></div>
+        <div>
+          <div id="profileName" style="font-family:var(--font-display);font-size:18px;font-weight:800"></div>
+          <div id="profileEmail" style="color:var(--muted);font-size:13px;margin-top:2px"></div>
+          <div id="profileSince" style="color:var(--muted);font-size:12px;margin-top:2px"></div>
+        </div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="doLogout()">🚪 Sair da conta</button>
+    </div>
+
+    <!-- API Keys -->
+    <div class="config-section">
+      <div class="config-title">🔑 Chaves de API</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:10px;line-height:1.6">
+        Suas chaves ficam salvas <strong style="color:var(--text)">separadamente por usuário</strong> neste dispositivo. Ninguém mais tem acesso. Após salvar, o app preenche automaticamente.
+      </p>
+      <!-- Free Gemini Key Guide -->
+      <div style="margin-bottom:20px;padding:14px 16px;border-radius:14px;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2)">
+        <div style="font-weight:800;font-size:13px;color:var(--blue);margin-bottom:8px">💎 Como obter uma chave GRÁTIS do Gemini (Google)</div>
+        <ol style="color:var(--muted);font-size:13px;line-height:1.8;padding-left:18px">
+          <li>Acesse <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);font-weight:700">aistudio.google.com/app/apikey</a></li>
+          <li>Faça login com sua conta Google</li>
+          <li>Clique em <strong style="color:var(--text)">"Create API Key"</strong></li>
+          <li>Copie a chave gerada (começa com <code style="color:var(--yellow)">AIza...</code>)</li>
+          <li>Cole no campo 💎 Gemini abaixo e clique em <strong style="color:var(--green)">Salvar</strong></li>
+        </ol>
+        <div style="margin-top:8px;font-size:12px;color:var(--green);font-weight:600">✅ Plano gratuito: 1.500 requests/dia com gemini-1.5-flash</div>
+      </div>
+      <div class="field">
+        <label>🤖 Claude (Anthropic)</label>
+        <div style="display:flex;gap:8px">
+          <div style="position:relative;flex:1">
+            <input id="keyClaude" class="input" type="password" placeholder="sk-ant-..." style="padding-right:44px">
+            <button onclick="toggleVisible('keyClaude',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">👁</button>
+          </div>
+          <button class="btn btn-green btn-sm" onclick="saveKey('claude','keyClaude')">Salvar</button>
+          <button class="btn btn-dark btn-sm" onclick="clearKey('claude','keyClaude')">✕</button>
+        </div>
+        <div id="keyStatusClaude" style="font-size:12px;margin-top:6px;color:var(--muted)"></div>
+      </div>
+      <div class="field">
+        <label>✨ OpenAI (ChatGPT)</label>
+        <div style="display:flex;gap:8px">
+          <div style="position:relative;flex:1">
+            <input id="keyOpenai" class="input" type="password" placeholder="sk-proj-..." style="padding-right:44px">
+            <button onclick="toggleVisible('keyOpenai',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">👁</button>
+          </div>
+          <button class="btn btn-green btn-sm" onclick="saveKey('openai','keyOpenai')">Salvar</button>
+          <button class="btn btn-dark btn-sm" onclick="clearKey('openai','keyOpenai')">✕</button>
+        </div>
+        <div id="keyStatusOpenai" style="font-size:12px;margin-top:6px;color:var(--muted)"></div>
+      </div>
+      <div class="field">
+        <label>💎 Gemini (Google)</label>
+        <div style="display:flex;gap:8px">
+          <div style="position:relative;flex:1">
+            <input id="keyGemini" class="input" type="password" placeholder="AIza..." style="padding-right:44px">
+            <button onclick="toggleVisible('keyGemini',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">👁</button>
+          </div>
+          <button class="btn btn-green btn-sm" onclick="saveKey('gemini','keyGemini')">Salvar</button>
+          <button class="btn btn-dark btn-sm" onclick="clearKey('gemini','keyGemini')">✕</button>
+        </div>
+        <div id="keyStatusGemini" style="font-size:12px;margin-top:6px;color:var(--muted)"></div>
+      </div>
+    </div>
+
+    <!-- Data -->
+    <div class="config-section">
+      <div class="config-title">💾 Dados locais</div>
+      <div class="cta-row">
+        <button class="btn btn-dark btn-sm" onclick="exportData()">⬇ Exportar backup</button>
+        <button class="btn btn-dark btn-sm" onclick="document.getElementById('importInput').click()">⬆ Importar backup</button>
+        <button class="btn btn-red btn-sm" onclick="clearAll()">🗑 Apagar tudo</button>
+      </div>
+      <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+
+    <!-- About -->
+    <div class="config-section">
+      <div class="config-title">ℹ️ Sobre o FlashStudy V6</div>
+      <p style="color:var(--muted);font-size:14px;line-height:1.7">
+        App de estudo com IA para extração automática de PDFs e slides.<br>
+        ✅ Funciona offline — dados salvos por usuário no dispositivo<br>
+        ✅ Multi-usuário — cada conta tem seus próprios decks e chaves<br>
+        ✅ Mascote com 4 estados emocionais acompanha seu progresso<br>
+        ✅ Compatível com Claude, OpenAI e Gemini
+      </p>
+    </div>
+  </main>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <button class="nav-btn active" id="nav-home" onclick="go('home',this)"><span class="nav-icon">🏠</span>Início</button>
+    <button class="nav-btn" id="nav-library" onclick="go('library',this)"><span class="nav-icon">📚</span>Biblioteca</button>
+    <button class="nav-btn" id="nav-study" onclick="go('study',this)"><span class="nav-icon">🎯</span>Estudar</button>
+    <button class="nav-btn" id="nav-create" onclick="go('create',this)"><span class="nav-icon">✨</span>IA</button>
+    <button class="nav-btn" id="nav-stats" onclick="go('stats',this)"><span class="nav-icon">📊</span>Stats</button>
+  </nav>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('shareModal')">✕</button>
+    <div class="modal-title">🔗 Compartilhar deck</div>
+    <div class="modal-sub" id="shareModalSub">Copie os cards como JSON para compartilhar.</div>
+    <div class="share-url" id="shareUrl" style="display:none;max-height:120px;overflow:auto"></div>
+    <div class="cta-row" style="margin-top:14px">
+      <button class="btn btn-blue btn-sm" id="shareGenBtn" onclick="generateShareData()">Exportar deck</button>
+      <button class="btn btn-dark btn-sm" id="shareCopyBtn" style="display:none" onclick="copyShare()">Copiar JSON</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+<!-- CONFETTI -->
+<div class="confetti-wrap" id="confetti"></div>
+
+<script>
+// =============================================
+// USER MANAGEMENT SYSTEM
+// =============================================
+const USERS_KEY = 'fs6_users';
+const SESSION_KEY = 'fs6_session';
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch { return []; }
+}
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
+}
+function setSession(user) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+}
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
+async function hashPassword(pass) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pass + 'flashstudy_v6_salt');
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display = 'none';
+
+  if (!email || !pass) { showAuthErr('loginErr','Preencha e-mail e senha.'); return; }
+
+  const users = getUsers();
+  const user = users.find(u => u.email === email);
+  if (!user) { showAuthErr('loginErr','Usuário não encontrado. Crie uma conta.'); setMascotState('loginMascot','state-worried'); return; }
+
+  const hash = await hashPassword(pass);
+  if (hash !== user.passwordHash) { showAuthErr('loginErr','Senha incorreta.'); setMascotState('loginMascot','state-sad'); return; }
+
+  setSession({ id: user.id, email: user.email, name: user.name });
+  setMascotState('loginMascot','state-fire');
+  setTimeout(() => launchApp(user), 500);
+}
+
+async function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('regPass').value;
+  const errEl = document.getElementById('regErr');
+  errEl.style.display = 'none';
+
+  if (!name) { showAuthErr('regErr','Informe seu nome.'); return; }
+  if (!email || !email.includes('@')) { showAuthErr('regErr','E-mail inválido.'); return; }
+  if (pass.length < 6) { showAuthErr('regErr','Senha deve ter no mínimo 6 caracteres.'); return; }
+
+  const users = getUsers();
+  if (users.find(u => u.email === email)) { showAuthErr('regErr','Este e-mail já está cadastrado.'); return; }
+
+  const hash = await hashPassword(pass);
+  const newUser = { id: generateId(), email, name, passwordHash: hash, createdAt: new Date().toISOString() };
+  users.push(newUser);
+  saveUsers(users);
+
+  setSession({ id: newUser.id, email: newUser.email, name: newUser.name });
+  setTimeout(() => launchApp(newUser), 300);
+}
+
+function doLogout() {
+  if (!confirm('Sair da conta?')) return;
+  clearSession();
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('registerScreen').style.display = 'none';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+  setMascotState('loginMascot','state-happy');
+}
+
+function showAuthErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function switchToRegister() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('registerScreen').style.display = 'flex';
+}
+function switchToLogin() {
+  document.getElementById('registerScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+function togglePwd(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
+
+// Mascot state control
+function setMascotState(containerId, state) {
+  const el = document.getElementById(containerId) || document.querySelector('.mascot-container');
+  if (!el) return;
+  el.className = 'mascot-container ' + state;
+}
+function setAppMascotState(state) {
+  const el = document.getElementById('appMascotContainer');
+  if (el) el.className = 'mascot-container ' + state;
+}
+
+// =============================================
+// APP STATE (per user)
+// =============================================
+let currentUser = null;
+const DEFAULT_APP = {
+  cards: [],
+  stats: { xp: 0, streak: 0, correct: 0, wrong: 0, todayXp: 0, lastDate: '', dailyGoal: 20 },
+  settings: { provider: 'claude', apiKey: '', model: 'claude-sonnet-4-20250514', dailyGoal: 20 }
+};
+
+let _app = null;
+
+function getDataKey(userId) { return `fs6_data_${userId}`; }
+function getKeysKey(userId) { return `fs6_keys_${userId}`; }
+
+function loadUserData(userId) {
+  try {
+    const raw = localStorage.getItem(getDataKey(userId));
+    return raw ? JSON.parse(raw) : deepClone(DEFAULT_APP);
+  } catch { return deepClone(DEFAULT_APP); }
+}
+function saveUserData() {
+  if (!currentUser) return;
+  localStorage.setItem(getDataKey(currentUser.id), JSON.stringify(_app));
+}
+function loadKeys() {
+  if (!currentUser) return {};
+  try { return JSON.parse(localStorage.getItem(getKeysKey(currentUser.id)) || '{}'); } catch { return {}; }
+}
+function saveKeys(keys) {
+  if (!currentUser) return;
+  localStorage.setItem(getKeysKey(currentUser.id), JSON.stringify(keys));
+}
+
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+function save() { saveUserData(); }
+window._save = save;
+function rerender() { renderHome(); renderLibrary(); renderStats(); updateChips(); }
+window._rerender = rerender;
+
+function launchApp(user) {
+  currentUser = user;
+  _app = loadUserData(user.id);
+  window._app = _app;
+
+  // Hide auth screens, show app
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('registerScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  // Update UI with user info
+  const initials = user.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userNameChip').textContent = user.name.split(' ')[0];
+
+  // Profile section
+  document.getElementById('profileAvatar').textContent = initials;
+  document.getElementById('profileName').textContent = user.name;
+  document.getElementById('profileEmail').textContent = user.email;
+  const users = getUsers();
+  const fullUser = users.find(u => u.id === user.id);
+  if (fullUser?.createdAt) {
+    const d = new Date(fullUser.createdAt);
+    document.getElementById('profileSince').textContent = `Membro desde ${d.toLocaleDateString('pt-BR')}`;
+  }
+
+  go('home');
+  rerender();
+  syncSettingsUI();
+  renderKeyStatuses();
+  toast(`👋 Olá, ${user.name.split(' ')[0]}!`);
+}
+
+// On page load: check session
+window.addEventListener('DOMContentLoaded', () => {
+  const session = getSession();
+  if (session) {
+    const users = getUsers();
+    const user = users.find(u => u.id === session.id);
+    if (user) { launchApp(user); return; }
+  }
+  // Show login
+  document.getElementById('loginScreen').style.display = 'flex';
+});
+
+// =============================================
+// NAVIGATION
+// =============================================
+let currentScreen = 'home';
+function go(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const s = document.getElementById(id);
+  if (s) s.classList.add('active');
+  const nb = btn || document.getElementById('nav-' + id);
+  if (nb) nb.classList.add('active');
+  currentScreen = id;
+  if (id === 'library') renderLibrary();
+  if (id === 'stats') renderStats();
+  if (id === 'create') syncSettingsUI();
+  if (id === 'study' && studyState.cards.length === 0) renderEmptyStudy();
+}
+
+// =============================================
+// CHIPS & STREAK
+// =============================================
+function checkStreak() {
+  const today = new Date().toDateString();
+  if (_app.stats.lastDate !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (_app.stats.lastDate === yesterday) {
+      _app.stats.streak = (_app.stats.streak || 0) + 1;
+    } else if (_app.stats.lastDate !== today) {
+      _app.stats.streak = 1;
+    }
+    _app.stats.todayXp = 0;
+    _app.stats.lastDate = today;
+  }
+}
+function updateChips() {
+  checkStreak();
+  document.getElementById('streakChip').textContent = _app.stats.streak || 0;
+  document.getElementById('xpChip').textContent = _app.stats.xp || 0;
+}
+
+// =============================================
+// HOME RENDER & MASCOT STATES
+// =============================================
+const MASCOT_STATES = {
+  new:     { state:'state-happy',  mood:'Bem-vindo! 🌟',          text:'Crie seu primeiro deck para começar.' },
+  low:     { state:'state-happy',  mood:'Pronto para estudar!',   text:'Cada sessão te aproxima do domínio.' },
+  medium:  { state:'state-fire',   mood:'Em chamas! 🔥',          text:'Você está em uma ofensiva incrível!' },
+  high:    { state:'state-fire',   mood:'Lendário! 🏆',           text:'Desempenho nas alturas. Continue!' },
+  worried: { state:'state-worried',mood:'Atenção! ⚠️',           text:'Você tem cards que precisam de revisão.' },
+  sad:     { state:'state-sad',    mood:'Não desista! 💙',        text:'Cada erro é uma chance de aprender.' },
+};
+
+function getMascotInfo() {
+  const streak = _app.stats.streak || 0;
+  const todayXp = _app.stats.todayXp || 0;
+  const goal = _app.stats.dailyGoal || 20;
+  const cards = _app.cards.length;
+  if (!cards) return MASCOT_STATES.new;
+  if (streak >= 7 || todayXp >= goal) return MASCOT_STATES.high;
+  if (streak >= 3 || todayXp >= goal * 0.5) return MASCOT_STATES.medium;
+  const hardCards = _app.cards.filter(c => (c.wrong||0) > (c.correct||0)).length;
+  if (hardCards > cards * 0.4) return MASCOT_STATES.worried;
+  if (todayXp === 0 && cards > 0) return MASCOT_STATES.sad;
+  return MASCOT_STATES.low;
+}
+
+function renderHome() {
+  if (!_app) return;
+  checkStreak();
+  const decks = deckSummaries();
+  const goal = _app.stats.dailyGoal || 20;
+  const todayXp = _app.stats.todayXp || 0;
+  const pct = Math.min(100, Math.round(todayXp / goal * 100));
+
+  document.getElementById('kpiCards').textContent = _app.cards.length;
+  document.getElementById('kpiTodayXp').textContent = todayXp;
+  document.getElementById('kpiStreak').textContent = _app.stats.streak || 0;
+  document.getElementById('kpiSubjects').textContent = new Set(_app.cards.map(c => c.subject)).size;
+  document.getElementById('dailyProgress').style.width = pct + '%';
+  document.getElementById('dailyText').textContent = `${todayXp}/${goal} XP hoje`;
+
+  // Trail
+  const nodes = [
+    { label:'✓', state: pct>=25?'done':(pct>0?'active':'locked') },
+    { label:'★', state: pct>=50?'done':(pct>=25?'active':'locked') },
+    { label:'⚡', state: pct>=75?'done':(pct>=50?'active':'locked') },
+    { label:'🏆', state: pct>=100?'done':(pct>=75?'active':'locked') },
+  ];
+  document.getElementById('trailNodes').innerHTML = nodes.map((n,i) => `
+    ${i>0?`<div class="trail-connector ${nodes[i-1].state==='done'?'done':''}"></div>`:''}
+    <div class="trail-node ${n.state}">${n.label}</div>
+  `).join('');
+
+  // Mascot
+  const m = getMascotInfo();
+  document.getElementById('mascotMood').textContent = m.mood;
+  document.getElementById('mascotText').textContent = m.text;
+  setAppMascotState(m.state);
+
+  // Decks
+  const container = document.getElementById('homeDecks');
+  if (!decks.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><strong>Nenhum deck ainda</strong><p>Vá em ✨ IA para gerar seus primeiros flashcards</p></div>`;
+    return;
+  }
+  container.innerHTML = decks.slice(0,5).map(d => deckCardHTML(d)).join('');
+}
+
+function deckSummaries() {
+  const map = {};
+  _app.cards.forEach(c => {
+    const k = `${c.subject}||${c.topic}`;
+    if (!map[k]) map[k] = { subject:c.subject, topic:c.topic, cards:[], key:k };
+    map[k].cards.push(c);
+  });
+  return Object.values(map).map(d => {
+    const total = d.cards.length;
+    const correct = d.cards.reduce((a,c)=>a+(c.correct||0),0);
+    const wrong = d.cards.reduce((a,c)=>a+(c.wrong||0),0);
+    const mastery = total ? Math.min(100, Math.round(correct/Math.max(1,correct+wrong)*100)) : 0;
+    return { ...d, total, mastery };
+  });
+}
+
+const SUBJECT_ICONS = {'Direito':'⚖️','Medicina':'🩺','Matemática':'📐','História':'📜','Biologia':'🧬','Química':'⚗️','Física':'⚛️','Inglês':'🌍','Programação':'💻','Economia':'💰'};
+function subjectIcon(s) {
+  for (const [k,v] of Object.entries(SUBJECT_ICONS)) if (s?.toLowerCase().includes(k.toLowerCase())) return v;
+  return '📖';
+}
+function deckCardHTML(d) {
+  return `<div class="deck-card" onclick="openDeck('${esc(d.subject)}','${esc(d.topic)}')">
+    <div class="deck-icon">${subjectIcon(d.subject)}</div>
+    <div class="deck-info">
+      <div class="deck-name">${esc2(d.subject)}</div>
+      <div class="deck-meta">${esc2(d.topic)} • ${d.total} cards</div>
+      <div class="progress"><span style="width:${d.mastery}%"></span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:600">${d.mastery}% domínio</div>
+    </div>
+    <div class="deck-actions">
+      <button class="btn btn-blue btn-sm btn-icon" onclick="event.stopPropagation();openShareModal('${esc(d.key)}')" title="Compartilhar">🔗</button>
+      <button class="btn btn-green btn-sm" onclick="event.stopPropagation();openDeck('${esc(d.subject)}','${esc(d.topic)}')">Estudar</button>
+    </div>
+  </div>`;
+}
+
+// =============================================
+// LIBRARY
+// =============================================
+function renderLibrary() {
+  if (!_app) return;
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  const decks = deckSummaries().filter(d=>!q||d.subject.toLowerCase().includes(q)||d.topic.toLowerCase().includes(q));
+  const deckEl = document.getElementById('libraryDecks');
+  deckEl.innerHTML = decks.length ? decks.map(d=>deckCardHTML(d)).join('') : `<div class="empty-state"><div class="empty-icon">🗂️</div><strong>Nenhum deck encontrado</strong></div>`;
+
+  const cards = _app.cards.filter(c=>!q||c.subject?.toLowerCase().includes(q)||c.topic?.toLowerCase().includes(q)||c.question?.toLowerCase().includes(q));
+  document.getElementById('libraryCards').innerHTML = cards.slice(0,30).map(c=>`
+    <div class="deck-card" style="flex-direction:column;align-items:flex-start;gap:10px">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--muted)">${esc2(c.subject)} › ${esc2(c.topic)}</div>
+        <span class="card-badge ${c.difficulty==='fácil'?'easy':c.difficulty==='difícil'?'hard':'medium'}">${c.difficulty||'médio'}</span>
+      </div>
+      <div style="font-weight:700;font-size:15px">${esc2(c.question)}</div>
+      <div style="font-size:13px;color:var(--muted)">${esc2((c.answer||'').slice(0,100))}${(c.answer||'').length>100?'…':''}</div>
+      <button class="btn btn-red btn-sm" onclick="deleteCard('${c.id}')">Remover</button>
+    </div>`).join('');
+}
+
+function deleteCard(id) {
+  _app.cards = _app.cards.filter(c=>c.id!==id);
+  save(); renderLibrary(); renderHome(); renderStats();
+}
+
+// =============================================
+// STUDY SESSION
+// =============================================
+let studyState = { cards:[], index:0, correct:0, wrong:0, revealed:false };
+
+function openDeck(subject, topic) {
+  const cards = _app.cards.filter(c=>c.subject===subject&&c.topic===topic);
+  startStudySession(cards);
+}
+function startStudy() {
+  if (!_app.cards.length) { go('create'); toast('Gere flashcards primeiro!'); return; }
+  const sorted = [..._app.cards].sort((a,b)=>((b.wrong||0)/(b.correct+b.wrong+1))-((a.wrong||0)/(a.correct+a.wrong+1)));
+  startStudySession(sorted.slice(0,20));
+}
+function startStudySession(cards) {
+  const shuffled = [...cards].sort(()=>Math.random()-.5);
+  studyState = { cards:shuffled, index:0, correct:0, wrong:0, revealed:false };
+  go('study', document.getElementById('nav-study'));
+  renderStudy();
+}
+
+function renderStudy() {
+  const wrap = document.getElementById('studyWrap');
+  if (!studyState.cards.length) { renderEmptyStudy(); return; }
+  if (studyState.index >= studyState.cards.length) { renderSessionEnd(); return; }
+  const c = studyState.cards[studyState.index];
+  const pct = Math.round(studyState.index/studyState.cards.length*100);
+  const diffClass = c.difficulty==='fácil'?'easy':c.difficulty==='difícil'?'hard':'medium';
+  wrap.innerHTML = `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;color:var(--muted);font-weight:600">${studyState.index+1} / ${studyState.cards.length}</span>
+        <div style="display:flex;gap:10px">
+          <span style="color:var(--green);font-weight:700">✅ ${studyState.correct}</span>
+          <span style="color:var(--red);font-weight:700">❌ ${studyState.wrong}</span>
+        </div>
+      </div>
+      <div class="card-progress-bar"><span style="width:${pct}%;height:100%;display:block;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:999px;transition:width .3s"></span></div>
+    </div>
+    <div class="study-card">
+      <div class="card-top">
+        <div style="font-size:13px;font-weight:700;color:var(--muted)">${esc2(c.subject)} › ${esc2(c.topic)}</div>
+        <span class="card-badge ${diffClass}">${c.difficulty||'médio'}</span>
+      </div>
+      <div class="card-question">${esc2(c.question)}</div>
+      ${studyState.revealed?`<div class="card-answer">${esc2(c.answer)}</div>`:''}
+      <div class="card-actions">
+        ${studyState.revealed
+          ?`<button class="btn btn-green" onclick="answerStudy(true)">✅ Acertei</button><button class="btn btn-red" onclick="answerStudy(false)">❌ Errei</button>`
+          :`<button class="btn btn-blue" onclick="revealStudy()">👁 Ver resposta</button>`}
+      </div>
+    </div>`;
+}
+
+function revealStudy() { studyState.revealed=true; renderStudy(); }
+function answerStudy(ok) {
+  const c = studyState.cards[studyState.index];
+  if (ok) {
+    c.correct=(c.correct||0)+1; _app.stats.correct=(_app.stats.correct||0)+1;
+    _app.stats.xp=(_app.stats.xp||0)+10; _app.stats.todayXp=(_app.stats.todayXp||0)+10;
+    studyState.correct++;
+  } else {
+    c.wrong=(c.wrong||0)+1; _app.stats.wrong=(_app.stats.wrong||0)+1; studyState.wrong++;
+  }
+  const idx = _app.cards.findIndex(x=>x.id===c.id);
+  if (idx>=0) _app.cards[idx]=c;
+  studyState.index++; studyState.revealed=false;
+  save(); updateChips(); renderStudy();
+}
+
+function renderSessionEnd() {
+  const acc = studyState.correct+studyState.wrong;
+  const pct = acc?Math.round(studyState.correct/acc*100):0;
+  if (pct>=80) showConfetti();
+  document.getElementById('studyWrap').innerHTML = `
+    <div class="trail-wrap" style="text-align:center">
+      <div style="font-size:56px;margin-bottom:8px">${pct>=80?'🏆':pct>=50?'⭐':'💪'}</div>
+      <div style="font-family:var(--font-display);font-size:26px;font-weight:900">Sessão concluída!</div>
+      <div style="color:var(--muted);font-size:14px;margin:8px 0 20px">+${studyState.correct*10} XP ganhos</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);max-width:300px;margin:0 auto 20px">
+        <div class="kpi green"><div class="kpi-label">Acertos</div><div class="kpi-value">${studyState.correct}</div></div>
+        <div class="kpi" style="color:var(--red)"><div class="kpi-label">Erros</div><div class="kpi-value">${studyState.wrong}</div></div>
+      </div>
+      <div class="cta-row" style="justify-content:center">
+        <button class="btn btn-green" onclick="startStudy()">Nova revisão</button>
+        <button class="btn btn-dark" onclick="go('home')">Início</button>
+      </div>
+    </div>`;
+  renderHome(); renderStats();
+}
+
+function renderEmptyStudy() {
+  document.getElementById('studyWrap').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">🎯</div>
+      <strong>Nenhum deck para estudar</strong>
+      <p>Gere flashcards com IA para começar</p>
+      <button class="btn btn-blue" style="margin-top:16px" onclick="go('create')">✨ Criar com IA</button>
+    </div>`;
+}
+
+// =============================================
+// STATS
+// =============================================
+function renderStats() {
+  if (!_app) return;
+  const lvl = Math.floor(Math.sqrt((_app.stats.xp||0)/50))+1;
+  document.getElementById('statXp').textContent = _app.stats.xp||0;
+  document.getElementById('statStreak').textContent = _app.stats.streak||0;
+  document.getElementById('statCorrect').textContent = _app.stats.correct||0;
+  document.getElementById('statWrong').textContent = _app.stats.wrong||0;
+  document.getElementById('statLevel').textContent = lvl;
+  document.getElementById('statGoal').textContent = _app.stats.dailyGoal||20;
+
+  const bySubj = {};
+  _app.cards.forEach(c => {
+    if (!bySubj[c.subject]) bySubj[c.subject]={correct:0,wrong:0,total:0};
+    bySubj[c.subject].total++;
+    bySubj[c.subject].correct+=(c.correct||0);
+    bySubj[c.subject].wrong+=(c.wrong||0);
+  });
+  document.getElementById('subjectStats').innerHTML = Object.entries(bySubj).map(([subj,s])=>{
+    const mastery = s.correct+s.wrong>0?Math.round(s.correct/(s.correct+s.wrong)*100):0;
+    return `<div class="deck-card" style="flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700">${subjectIcon(subj)} ${esc2(subj)}</div>
+        <span style="font-size:13px;font-weight:700;color:var(--green)">${mastery}%</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted)">✅ ${s.correct} acertos • ❌ ${s.wrong} erros • 📚 ${s.total} cards</div>
+      <div class="progress"><span style="width:${mastery}%"></span></div>
+    </div>`;
+  }).join('') || `<div class="empty-state"><div class="empty-icon">📊</div><strong>Nenhum dado ainda</strong></div>`;
+}
+
+// =============================================
+// FILE EXTRACTION
+// =============================================
+async function handleFileSelect() {
+  const file = document.getElementById('fileInput').files[0];
+  if (file) await processFile(file);
+}
+function dzDrag(e,on) { e.preventDefault(); document.getElementById('dropzone').classList.toggle('drag',on); }
+async function dzDrop(e) {
+  e.preventDefault(); document.getElementById('dropzone').classList.remove('drag');
+  const file = e.dataTransfer.files[0]; if (file) await processFile(file);
+}
+
+async function processFile(file) {
+  const dz=document.getElementById('dropzone'), dzIcon=document.getElementById('dzIcon'),
+        dzText=document.getElementById('dzText'), dzSub=document.getElementById('dzSub'),
+        dzProg=document.getElementById('dzProgress'), notice=document.getElementById('extractNotice');
+  dz.classList.add('loading'); dzIcon.textContent='⏳'; dzText.textContent='Extraindo texto...'; dzSub.textContent=file.name; notice.style.display='none';
+  let prog=0;
+  const iv=setInterval(()=>{ prog=Math.min(90,prog+Math.random()*12); dzProg.style.width=prog+'%'; },150);
+  try {
+    let text='';
+    const name=file.name.toLowerCase();
+    if (name.endsWith('.pdf')) text=await extractPdfText(file);
+    else if (name.endsWith('.pptx')) text=await extractPptxText(file);
+    else text=await file.text();
+    text=cleanText(text);
+    clearInterval(iv); dzProg.style.width='100%';
+    setTimeout(()=>{ dz.classList.remove('loading'); dzIcon.textContent='✅'; dzText.textContent='Texto extraído!'; dzSub.textContent=`${text.split(' ').length} palavras • ${file.name}`; dzProg.style.width='0%'; },400);
+    document.getElementById('sourceText').value=text;
+    notice.style.display='block';
+    notice.innerHTML=`✅ <strong>${file.name}</strong> extraído — ${text.split(' ').length} palavras, ~${Math.ceil(text.length/4)} tokens.`;
+    toast('Arquivo extraído com sucesso');
+  } catch(err) {
+    clearInterval(iv); dz.classList.remove('loading'); dzIcon.textContent='❌'; dzText.textContent='Falha na extração'; dzSub.textContent=err.message; dzProg.style.width='0%';
+    toast('Não foi possível extrair o arquivo'); console.error(err);
+  }
+}
+
+async function extractPdfText(file) {
+  if (typeof pdfjsLib==='undefined') throw new Error('PDF.js não carregou. Recarregue a página.');
+  const buffer=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buffer)}).promise;
+  let full='';
+  for (let i=1;i<=pdf.numPages;i++) {
+    const page=await pdf.getPage(i);
+    const tc=await page.getTextContent();
+    let prev=null, pageText='';
+    for (const item of tc.items) {
+      if (!item.str||!item.str.trim()) continue;
+      if (prev) { const gap=Math.abs((item.transform[5]||0)-(prev.transform[5]||0)); pageText+=gap>8?'\n':' '; }
+      pageText+=item.str; prev=item;
+    }
+    if (pageText.trim()) full+=`[Página ${i}]\n${pageText.trim()}\n\n`;
+  }
+  if (!full.trim()) throw new Error('Nenhum texto encontrado. O PDF pode ser imagem escaneada.');
+  return full;
+}
+
+async function extractPptxText(file) {
+  const zip=await JSZip.loadAsync(file);
+  const slides=Object.keys(zip.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b)=>Number(a.match(/slide(\d+)/)[1])-Number(b.match(/slide(\d+)/)[1]));
+  let text='';
+  for (const name of slides) {
+    const xml=await zip.files[name].async('string');
+    const parts=[...xml.matchAll(/<a:t[^>]*>(.*?)<\/a:t>/g)].map(m=>decodeXml(m[1])).filter(t=>t.trim());
+    if (parts.length) text+='— Slide —\n'+parts.join(' ')+'\n\n';
+  }
+  return text;
+}
+
+function decodeXml(s) { return s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'"); }
+function cleanText(t) { return String(t||'').replace(/\r\n/g,'\n').replace(/[ \t]{3,}/g,' ').replace(/\n{4,}/g,'\n\n').trim(); }
+
+// =============================================
+// AI GENERATION
+// =============================================
+const MODELS = {
+  free:   ['local-smart-v1'],
+  claude: ['claude-sonnet-4-20250514','claude-opus-4-20250514','claude-haiku-4-5-20251001'],
+  openai: ['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo'],
+  gemini: ['gemini-1.5-flash','gemini-1.5-pro','gemini-pro']
+};
+
+function getActiveKey() {
+  const keys = loadKeys();
+  const provider = _app.settings.provider||'gemini';
+  return keys[provider]||_app.settings.apiKey||'';
+}
+
+// =============================================
+// FREE MODE — Local Smart Extraction (no API key)
+// =============================================
+function generateFreeCards(text, subject, topic, count) {
+  const sentences = text
+    .replace(/\r\n/g,'\n')
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map(s=>s.trim())
+    .filter(s=>s.length>30 && s.length<600);
+
+  const cards = [];
+  const used = new Set();
+
+  // Pattern 1 — Definitions: "X é/são/significa/define-se como Y"
+  const defPatterns = [
+    /^(.{5,60}?)\s+(?:é|são|significa|refere-se a|consiste em|define-se como|entende-se por|caracteriza-se por)\s+(.{10,300}[.!?]?)$/i,
+    /^(.{5,60}?)\s*[:—–]\s*(.{10,300}[.!?]?)$/
+  ];
+  for (const sent of sentences) {
+    if (cards.length >= Math.ceil(count*0.45)) break;
+    for (const pat of defPatterns) {
+      const m = sent.match(pat);
+      if (m && !used.has(sent.slice(0,30))) {
+        const term = m[1].replace(/^[•\-\d.]+\s*/, '').trim();
+        const def  = m[2].trim();
+        if (term.split(' ').length <= 10 && def.length > 15) {
+          cards.push({ question:`O que é/são ${term}?`, answer:def, difficulty:'médio' });
+          used.add(sent.slice(0,30)); break;
+        }
+      }
+    }
+  }
+
+  // Pattern 2 — Lists: capture header + items
+  const listBlocks = text.match(/([^\n]{5,80})\n((?:\s*[•\-\*\d]+[.)]\s*.+\n?){2,8})/g) || [];
+  for (const block of listBlocks) {
+    if (cards.length >= Math.ceil(count*0.7)) break;
+    const lines = block.split('\n').filter(l=>l.trim());
+    const header = lines[0].replace(/[:?]+$/, '').trim();
+    const items  = lines.slice(1).map(l=>l.replace(/^[\s•\-\*\d.)+]+/,'').trim()).filter(Boolean);
+    if (items.length >= 2 && !used.has(header.slice(0,25))) {
+      cards.push({
+        question: `Quais são os elementos/características de: ${header}?`,
+        answer: items.map((it,i)=>`${i+1}. ${it}`).join('\n'),
+        difficulty: items.length > 4 ? 'difícil' : 'médio'
+      });
+      used.add(header.slice(0,25));
+    }
+  }
+
+  // Pattern 3 — Important sentences (long, information-dense)
+  const stopWords = new Set(['de','do','da','dos','das','em','no','na','nos','nas','a','o','e','é','que','para','com','por','um','uma','se','ou','mas','como','ao','à','isso','este','esta','esse','essa','seu','sua','seus','suas','foi','ser','ter','tem','mais','também','sobre','quando','onde','há','já','muito','cada','entre','pelos','pelas','pelo','pela','numa','num']);
+  const scored = sentences.filter(s=>!used.has(s.slice(0,30))).map(s=>{
+    const words = s.toLowerCase().split(/\s+/).filter(w=>w.length>3 && !stopWords.has(w));
+    const score = words.length + (s.includes(':') ? 5 : 0) + (/\d/.test(s) ? 3 : 0);
+    return { s, score };
+  }).sort((a,b)=>b.score-a.score);
+
+  const questionStarters = ['Explique:', 'O que significa:', 'Como ocorre:', 'Qual o papel de:', 'Por que:', 'Descreva:'];
+  let qi = 0;
+  for (const { s } of scored) {
+    if (cards.length >= count) break;
+    if (used.has(s.slice(0,30))) continue;
+    const starter = questionStarters[qi % questionStarters.length]; qi++;
+    const shortQ = s.length > 120 ? s.slice(0, s.indexOf(' ', 100)) + '...' : s;
+    cards.push({ question:`${starter} ${shortQ}`, answer:s, difficulty:'fácil' });
+    used.add(s.slice(0,30));
+  }
+
+  // Trim to requested count
+  return cards.slice(0, count);
+}
+
+async function generateCards() {
+  const provider=_app.settings.provider||'gemini';
+  const isFree = provider === 'free';
+  const apiKey = isFree ? '' : (getActiveKey()||document.getElementById('apiKey').value.trim());
+  const model=document.getElementById('modelSelect').value;
+  const subject=document.getElementById('subjectInput').value.trim()||'Geral';
+  const topic=document.getElementById('topicInput').value.trim()||'Conteúdo';
+  const count=Number(document.getElementById('countInput').value||10);
+  const source=document.getElementById('sourceText').value.trim();
+
+  if (!isFree && !apiKey) { toast('⚠️ Cole sua chave de API ou use o Modo Gratuito 🆓'); return; }
+  if (!source) { toast('⚠️ Extraia ou cole o conteúdo primeiro'); return; }
+
+  const btn=document.getElementById('generateBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Gerando...';
+
+  try {
+    let rawCards=[];
+
+    if (isFree) {
+      // Local smart extraction — no API
+      await new Promise(r=>setTimeout(r,600)); // small delay for UX
+      rawCards = generateFreeCards(source, subject, topic, count);
+      if (!rawCards.length) throw new Error('Não foi possível extrair flashcards. Tente com um texto mais estruturado (definições, listas, tópicos).');
+    } else {
+      const prompt=`Você é um especialista em criação de flashcards educacionais. Com base no texto abaixo, crie exatamente ${count} flashcards sobre "${topic}" de "${subject}".
+
+Retorne APENAS um JSON válido, sem markdown, sem explicação, no formato:
+{"cards":[{"question":"...","answer":"...","difficulty":"fácil|médio|difícil"}]}
+
+Texto:
+${source.slice(0,12000)}`;
+
+      let raw='';
+      if (provider==='claude') raw=await callClaude(apiKey,model,prompt);
+      else if (provider==='openai') raw=await callOpenAI(apiKey,model,prompt);
+      else raw=await callGemini(apiKey,model,prompt);
+
+      const m=raw.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error('Resposta da IA não é JSON válido');
+      const data=JSON.parse(m[0]);
+      rawCards = data.cards||[];
+      if (!rawCards.length) throw new Error('Nenhum card gerado');
+    }
+
+    const newCards=rawCards.map(c=>({
+      id:generateId(), subject, topic,
+      question:c.question, answer:c.answer,
+      difficulty:c.difficulty||'médio',
+      correct:0, wrong:0, createdAt:Date.now()
+    }));
+    _app.cards.push(...newCards);
+    save(); rerender();
+    toast(`✅ ${newCards.length} flashcards criados!${isFree?' (Modo Gratuito)':''}`);
+    go('library');
+  } catch(err) {
+    toast('❌ Erro: '+err.message);
+    console.error(err);
+  } finally {
+    btn.disabled=false; btn.innerHTML='✨ Gerar flashcards';
+  }
+}
+
+async function callClaude(key,model,prompt) {
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model,max_tokens:4096,messages:[{role:'user',content:prompt}]})
+  });
+  if (!r.ok) { const e=await r.json(); throw new Error(e.error?.message||'Erro Claude API'); }
+  const d=await r.json(); return d.content[0].text;
+}
+
+async function callOpenAI(key,model,prompt) {
+  const r=await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+    body:JSON.stringify({model,max_tokens:4096,messages:[{role:'user',content:prompt}]})
+  });
+  if (!r.ok) { const e=await r.json(); throw new Error(e.error?.message||'Erro OpenAI API'); }
+  const d=await r.json(); return d.choices[0].message.content;
+}
+
+async function callGemini(key,model,prompt) {
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+  });
+  if (!r.ok) { const e=await r.json(); throw new Error(e.error?.message||'Erro Gemini API'); }
+  const d=await r.json(); return d.candidates[0].content.parts[0].text;
+}
+
+function clearComposer() {
+  document.getElementById('sourceText').value='';
+  document.getElementById('subjectInput').value='';
+  document.getElementById('topicInput').value='';
+  document.getElementById('extractNotice').style.display='none';
+  document.getElementById('dzIcon').textContent='📂';
+  document.getElementById('dzText').textContent='Arraste ou toque para selecionar';
+  document.getElementById('dzSub').textContent='PDF, PPTX, TXT • Extração automática com IA';
+}
+
+// =============================================
+// API KEY MANAGEMENT (per user)
+// =============================================
+function saveKey(provider,inputId) {
+  const val=document.getElementById(inputId).value.trim();
+  if (!val) { toast('⚠️ Cole a chave antes de salvar'); return; }
+  const keys=loadKeys(); keys[provider]=val; saveKeys(keys);
+  if (_app.settings.provider===provider) {
+    _app.settings.apiKey=val; save();
+    // Hide free mode hint now that key is saved
+    const freeHint=document.getElementById('freeModeHint');
+    if (freeHint) freeHint.style.display='none';
+  }
+  renderKeyStatuses(); updateKeyStatus();
+  toast(`✅ Chave ${provider} salva para ${currentUser.name.split(' ')[0]}! Já pode usar.`);
+}
+function clearKey(provider,inputId) {
+  const keys=loadKeys(); delete keys[provider]; saveKeys(keys);
+  document.getElementById(inputId).value='';
+  if (_app.settings.provider===provider) { _app.settings.apiKey=''; document.getElementById('apiKey').value=''; save(); }
+  renderKeyStatuses(); updateKeyStatus();
+  toast(`Chave ${provider} removida`);
+}
+function renderKeyStatuses() {
+  if (!currentUser) return;
+  const keys=loadKeys();
+  [['claude','keyClaude','Claude'],['openai','keyOpenai','Openai'],['gemini','keyGemini','Gemini']].forEach(([p,inputId,label])=>{
+    const statusEl=document.getElementById('keyStatus'+label);
+    const inputEl=document.getElementById(inputId);
+    if (keys[p]) {
+      const masked=keys[p].slice(0,8)+'••••••••'+keys[p].slice(-4);
+      if (statusEl) statusEl.innerHTML=`<span style="color:var(--green)">✅ Salva:</span> ${masked}`;
+      if (inputEl&&!inputEl.value) inputEl.value=keys[p];
+    } else {
+      if (statusEl) statusEl.innerHTML=`<span style="color:var(--muted)">Nenhuma chave salva</span>`;
+    }
+  });
+}
+function updateKeyStatus() {
+  const key=getActiveKey();
+  const dot=document.getElementById('keyStatusDot');
+  const banner=document.getElementById('apiKeyBanner');
+  if (key) {
+    if (dot) dot.textContent='✅';
+    if (banner) { banner.style.display='flex'; document.getElementById('apiKeyBannerText').textContent=`Chave ${_app.settings.provider||'claude'} salva • ${key.slice(0,8)}••••`; }
+  } else {
+    if (dot) dot.textContent='⚠️';
+    if (banner) banner.style.display='none';
+  }
+}
+function toggleVisible(inputId,btn) {
+  const el=document.getElementById(inputId);
+  el.type=el.type==='password'?'text':'password'; btn.textContent=el.type==='password'?'👁':'🙈';
+}
+function toggleKeyVisible() {
+  const el=document.getElementById('apiKey'); const btn=document.getElementById('keyEyeBtn');
+  el.type=el.type==='password'?'text':'password'; btn.textContent=el.type==='password'?'👁':'🙈';
+}
+function setProvider(p) {
+  _app.settings.provider=p;
+  const isFree = p==='free';
+
+  // Toggle free mode UI
+  const freeInfo   = document.getElementById('freeModeInfo');
+  const freeHint   = document.getElementById('freeModeHint');
+  const keySection = document.getElementById('apiKeySection');
+  if (freeInfo)   freeInfo.style.display   = isFree ? 'block' : 'none';
+  if (freeHint)   freeHint.style.display   = 'none';
+  if (keySection) keySection.style.display = isFree ? 'none'  : 'block';
+
+  if (!isFree) {
+    const keys=loadKeys();
+    if (keys[p]) { _app.settings.apiKey=keys[p]; document.getElementById('apiKey').value=keys[p]; }
+  }
+  save();
+  document.querySelectorAll('.segment-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  const sel=document.getElementById('modelSelect');
+  sel.innerHTML=(MODELS[p]||[]).map(m=>`<option value="${m}">${m==='local-smart-v1'?'Extração Inteligente Local':m}</option>`).join('');
+  if (!isFree) { sel.value=_app.settings.model||MODELS[p][0]; updateKeyStatus(); }
+}
+
+function syncSettingsUI() {
+  const p=_app.settings.provider||'gemini';
+  const isFree = p==='free';
+  document.querySelectorAll('.segment-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  const sel=document.getElementById('modelSelect');
+  sel.innerHTML=(MODELS[p]||[]).map(m=>`<option value="${m}">${m==='local-smart-v1'?'Extração Inteligente Local':m}</option>`).join('');
+
+  const freeInfo   = document.getElementById('freeModeInfo');
+  const keySection = document.getElementById('apiKeySection');
+  const freeHint   = document.getElementById('freeModeHint');
+  if (freeInfo)   freeInfo.style.display   = isFree ? 'block' : 'none';
+  if (keySection) keySection.style.display = isFree ? 'none'  : 'block';
+
+  if (!isFree) {
+    if (_app.settings.model) sel.value=_app.settings.model;
+    const keys=loadKeys();
+    const activeKey=keys[p]||_app.settings.apiKey||'';
+    if (activeKey) { document.getElementById('apiKey').value=activeKey; _app.settings.apiKey=activeKey; }
+    // Show hint if no key saved for current provider
+    const hasKey = !!activeKey;
+    if (freeHint) freeHint.style.display = hasKey ? 'none' : 'block';
+  }
+  renderKeyStatuses(); updateKeyStatus();
+}
+function saveSetting(k,v) {
+  _app.settings[k]=v;
+  if (k==='apiKey'&&v) { const keys=loadKeys(); keys[_app.settings.provider||'claude']=v; saveKeys(keys); }
+  save();
+}
+
+// =============================================
+// SHARE MODAL
+// =============================================
+let _shareDeckKey=null;
+function openShareModal(key) {
+  _shareDeckKey=key;
+  document.getElementById('shareUrl').style.display='none';
+  document.getElementById('shareCopyBtn').style.display='none';
+  document.getElementById('shareGenBtn').style.display='inline-flex';
+  document.getElementById('shareModalSub').textContent='Exporte o deck como JSON para compartilhar.';
+  document.getElementById('shareModal').classList.add('active');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function generateShareData() {
+  if (!_shareDeckKey) return;
+  const [subject,topic]=_shareDeckKey.split('||');
+  const cards=_app.cards.filter(c=>c.subject===subject&&c.topic===topic);
+  const data=JSON.stringify({subject,topic,cards:cards.map(c=>({question:c.question,answer:c.answer,difficulty:c.difficulty}))},null,2);
+  document.getElementById('shareUrl').textContent=data;
+  document.getElementById('shareUrl').style.display='block';
+  document.getElementById('shareCopyBtn').style.display='inline-flex';
+  document.getElementById('shareGenBtn').style.display='none';
+}
+function copyShare() {
+  navigator.clipboard.writeText(document.getElementById('shareUrl').textContent).then(()=>toast('JSON copiado!')).catch(()=>toast('Selecione o texto manualmente'));
+}
+
+// =============================================
+// DATA IMPORT/EXPORT
+// =============================================
+function exportData() {
+  const blob=new Blob([JSON.stringify({..._app,exportedAt:new Date().toISOString(),user:currentUser.email},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`flashstudy_${currentUser.email}_${Date.now()}.json`; a.click();
+  toast('Backup exportado!');
+}
+function importData(e) {
+  const file=e.target.files[0]; if (!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{ try { const d=JSON.parse(ev.target.result); if (d.cards) _app.cards=[..._app.cards,...d.cards]; if (d.stats) _app.stats={..._app.stats,...d.stats}; save(); rerender(); toast(`${d.cards?.length||0} cards importados!`); } catch { toast('Arquivo inválido'); } };
+  reader.readAsText(file);
+}
+function clearAll() {
+  if (!confirm('Apagar todos os seus flashcards e estatísticas? Esta ação não pode ser desfeita.')) return;
+  _app.cards=[]; _app.stats={xp:0,streak:0,correct:0,wrong:0,todayXp:0,lastDate:'',dailyGoal:20};
+  save(); rerender(); toast('Dados apagados');
+}
+
+// =============================================
+// TOAST & CONFETTI
+// =============================================
+let _toastTimer=null;
+function toast(msg) {
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(_toastTimer); _toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+function showConfetti() {
+  const wrap=document.getElementById('confetti'); wrap.classList.add('show'); wrap.innerHTML='';
+  const colors=['#22c55e','#38bdf8','#a78bfa','#fbbf24','#f87171','#fb923c'];
+  for (let i=0;i<40;i++) {
+    const p=document.createElement('div'); p.className='confetti-piece';
+    p.style.cssText=`left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${1.5+Math.random()*1.5}s;animation-delay:${Math.random()*0.5}s;border-radius:${Math.random()>0.5?'50%':'2px'}`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>{ wrap.classList.remove('show'); wrap.innerHTML=''; },3500);
+}
+
+// =============================================
+// UTILS
+// =============================================
+function esc(s) { return String(s||'').replace(/'/g,"\\'"); }
+function esc2(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function generateId() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+</script>
+</body>
+</html>
