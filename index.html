@@ -14,7 +14,7 @@
 <!-- PWA Manifest inline -->
 <script>
 (function(){
-  const icon = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23070d1a'/><ellipse cx='256' cy='370' rx='150' ry='155' fill='%236dba1f'/><ellipse cx='256' cy='345' rx='140' ry='140' fill='%2382d125'/><ellipse cx='256' cy='375' rx='90' ry='100' fill='%239de040'/><ellipse cx='105' cy='355' rx='55' ry='90' fill='%235ea818' transform='rotate(-20 105 355)'/><ellipse cx='407' cy='355' rx='55' ry='90' fill='%235ea818' transform='rotate(20 407 355)'/><circle cx='256' cy='195' r='132' fill='%2382d125'/><circle cx='205' cy='188' r='86' fill='white'/><circle cx='307' cy='188' r='46' fill='white'/><circle cx='210' cy='194' r='28' fill='%231a1a2e'/><circle cx='312' cy='194' r='28' fill='%231a1a2e'/><circle cx='222' cy='180' r='12' fill='white'/><circle cx='324' cy='180' r='12' fill='white'/><path d='M225 232 Q256 268 287 232 Q256 242 225 232Z' fill='%23f97316'/><rect x='180' y='500' width='35' height='40' rx='8' fill='%23f97316'/><rect x='297' y='500' width='35' height='40' rx='8' fill='%23f97316'/><rect x='80' y='355' width='148' height='118' rx='18' fill='%23f5f0e0' stroke='%23d4b86a' stroke-width='4'/><text x='154' y='435' text-anchor='middle' fill='%23f97316' font-size='64' font-weight='900' font-family='Arial'>?</text></svg>`);
+  const icon = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23070d1a'/><ellipse cx='256' cy='370' rx='150' ry='155' fill='%236dba1f'/><ellipse cx='256' cy='345' rx='140' ry='140' fill='%2382d125'/><ellipse cx='256' cy='375' rx='90' ry='100' fill='%239de040'/><ellipse cx='105' cy='355' rx='55' ry='90' fill='%235ea818' transform='rotate(-20 105 355)'/><ellipse cx='407' cy='355' rx='55' ry='90' fill='%235ea818' transform='rotate(20 407 355)'/><circle cx='256' cy='195' r='132' fill='%2382d125'/><circle cx='205' cy='188' r='46' fill='white'/><circle cx='307' cy='188' r='46' fill='white'/><circle cx='210' cy='194' r='28' fill='%231a1a2e'/><circle cx='312' cy='194' r='28' fill='%231a1a2e'/><circle cx='222' cy='180' r='12' fill='white'/><circle cx='324' cy='180' r='12' fill='white'/><path d='M225 232 Q256 268 287 232 Q256 242 225 232Z' fill='%23f97316'/><rect x='180' y='500' width='35' height='40' rx='8' fill='%23f97316'/><rect x='297' y='500' width='35' height='40' rx='8' fill='%23f97316'/><rect x='80' y='355' width='148' height='118' rx='18' fill='%23f5f0e0' stroke='%23d4b86a' stroke-width='4'/><text x='154' y='435' text-anchor='middle' fill='%23f97316' font-size='64' font-weight='900' font-family='Arial'>?</text></svg>`);
   const manifest = {
     name: "FlashStudy V6",
     short_name: "FlashStudy",
@@ -39,7 +39,7 @@
   const appleLink = document.createElement('link');
   appleLink.rel = 'apple-touch-icon'; appleLink.href = icon;
   document.currentScript.after(appleLink);
- )));
+})();
 </script>
 
 <!-- Service Worker for offline support -->
@@ -47,7 +47,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-const CACHE = 'flashstudy-o6-cache';
+const CACHE = 'flashstudy-v6-cache';
 const URLS = [
   './',
   'https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap',
@@ -150,14 +150,14 @@ body::before {
 .auth-input:focus { outline: none; border-color: rgba(56,189,248,.4); box-shadow: 0 0 0 3px rgba(56,189,248,.1); }
 .auth-err { color: var(--red); font-size: 13px; font-weight: 600; margin-top: 10px; display: none; }
 .auth-link { color: var(--blue); background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: underline; }
-.auth-footer { color: var(--muted); fnnt-size: 14px; text-align: center; }
+.auth-footer { color: var(--muted); font-size: 14px; text-align: center; }
 
-/* ===== MASCNT SVG ===== */
+/* ===== MASCOT SVG ===== */
 .mascot-container { position: relative; width: 160px; height: 180px; }
 .mascot-svg { width: 160px; height: 180px; filter: drop-shadow(0 12px 24px rgba(0,0,0,.5)); animation: mascotFloat 3s ease-in-out infinite; }
 @keyframes mascotFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 
-/* Sparkles (cappy state) */
+/* Sparkles (happy state) */
 .sparkle { position: absolute; animation: sparkleAnim 1.5s ease-in-out infinite; opacity: 0; }
 .sparkle:nth-child(1) { top: 10px; left: 10px; animation-delay: 0s; }
 .sparkle:nth-child(2) { top: 0; right: 20px; animation-delay: 0.4s; }
@@ -208,7 +208,7 @@ body::before {
   background: rgba(7,13,26,.92); backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--line);
 }
-.brand { fnnt-family: var(--font-display); font-size: 24px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.brand { font-family: var(--font-display); font-size: 24px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .top-actions { display: flex; gap: 8px; align-items: center; }
 .chip { padding: 7px 12px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line2); font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .chip .dot { width: 8px; height: 8px; border-radius: 50%; transition: background .3s; }
@@ -227,7 +227,7 @@ body::before {
 /* ===== BUTTONS ===== */
 .btn { border: none; border-radius: var(--radius-sm); padding: 13px 18px; font-family: var(--font-body); font-weight: 700; font-size: 14px; cursor: pointer; transition: transform .15s, filter .15s; position: relative; overflow: hidden; white-space: nowrap; }
 .btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.1) 0%, transparent 60%); pointer-events: none; }
-.btn:active { transform: scale(.97) translateY(1px(; }
+.btn:active { transform: scale(.97) translateY(1px); }
 .btn:hover { filter: brightness(1.1); }
 .btn-green { background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; box-shadow: 0 4px 14px rgba(34,197,94,.3); }
 .btn-blue { background: linear-gradient(135deg, #0284c7, #38bdf8); color: #fff; box-shadow: 0 4px 14px rgba(56,189,248,.3); }
@@ -247,18 +247,39 @@ body::before {
 .kpi.green { color: var(--green); } .kpi.blue { color: var(--blue); } .kpi.yellow { color: var(--yellow); } .kpi.purple { color: var(--purple); }
 
 /* ===== SEC TITLE ===== */
-.sec-title { font-size: 11px; fnnt-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }
+.sec-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }
 .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
 /* ===== DECK CARDS ===== */
 .deck-grid { display: grid; gap: 12px; }
-.deck-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: transform .2s, border-color .2s; box-shadow: var(--shadow); }
+.deck-card { 
+  background: var(--panel); 
+  border: 1px solid var(--line); 
+  border-radius: var(--radius); 
+  padding: 20px; 
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+  cursor: pointer; 
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+}
+.deck-card.expanded {
+  flex-direction: column;
+  align-items: flex-start;
+}
 .deck-card:hover { transform: translateY(-2px); border-color: rgba(56,189,248,.25); }
 .deck-icon { width: 50px; height: 50px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; background: linear-gradient(135deg, var(--panel2), var(--panel3)); border: 1px solid var(--line2); }
 .deck-info { flex: 1; min-width: 0; }
-.deck-name { font-family: var(--font-display); font-size: 17px; fnnt-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-.deck-meta { fnnt-size: 13px; color: var(--muted); font-weight: 500; }
-.deck-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.deck-name { font-family: var(--font-display); font-size: 17px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.deck-meta { font-size: 13px; color: var(--muted); font-weight: 500; }
+.deck-actions { 
+  display: flex; 
+  gap: 8px; 
+  flex-shrink: 0;
+  animation: slideInUp 0.3s ease-out;
+}
 
 /* ===== PROGRESS ===== */
 .progress { height: 10px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); overflow: hidden; margin-top: 10px; }
@@ -269,8 +290,8 @@ body::before {
 .trail-nodes { display: flex; align-items: center; gap: 0; margin: 16px 0; overflow-x: auto; padding: 8px 0; }
 .trail-node { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; flex-shrink: 0; transition: transform .2s; }
 .trail-node.done { background: linear-gradient(135deg, #16a34a, #22c55e); border: 3px solid #4ade80; box-shadow: 0 0 20px rgba(34,197,94,.4); }
-.trail-node.active { background: linear-gradient(135deg, #d97706, #fbbf24); bnrder: 3px solid #fde68a; bnx-shadow: 0 0 20px rgba(251,191,36,.4); color: #78350f; }
-.trail-node.locked { background: var(--panel2); bnrder: 3px solid var(--line2); color: var(--muted); opacity: .6; }
+.trail-node.active { background: linear-gradient(135deg, #d97706, #fbbf24); border: 3px solid #fde68a; box-shadow: 0 0 20px rgba(251,191,36,.4); color: #78350f; }
+.trail-node.locked { background: var(--panel2); border: 3px solid var(--line2); color: var(--muted); opacity: .6; }
 .trail-connector { flex: 1; height: 4px; background: var(--panel2); border-radius: 999px; min-width: 20px; }
 .trail-connector.done { background: linear-gradient(90deg, #22c55e, #4ade80); }
 
@@ -285,35 +306,35 @@ body::before {
 /* ===== STUDY CARD ===== */
 .study-card { background: var(--panel); border: 1px solid var(--line); border-radius: 32px; padding: 28px; box-shadow: var(--shadow); min-height: 320px; display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; }
 .card-top { display: flex; justify-content: space-between; align-items: center; }
-.card-badge { padding: 6px 12px; border-radius: 999px; font-size: 12px; fnnt-weight: 700; background: var(--panel2); bnrder: 1px solid var(--line2); color: var(--muted); }
+.card-badge { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--panel2); border: 1px solid var(--line2); color: var(--muted); }
 .card-badge.easy { color: var(--green); border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.08); }
 .card-badge.medium { color: var(--yellow); border-color: rgba(251,191,36,.25); background: rgba(251,191,36,.08); }
 .card-badge.hard { color: var(--red); border-color: rgba(248,113,113,.25); background: rgba(248,113,113,.08); }
 .card-question { font-family: var(--font-display); font-size: 24px; font-weight: 800; line-height: 1.3; flex: 1; display: flex; align-items: center; }
-.card-answer { fnnt-size: 16px; line-height: 1.7; color: #a7f3c0; background: rgba(34,197,94,.07); padding: 18px; bnrder-radius: 18px; border: 1px solid rgba(34,197,94,.15); animation: fadeUp .2s ease; }
+.card-answer { font-size: 16px; line-height: 1.7; color: #a7f3c0; background: rgba(34,197,94,.07); padding: 18px; border-radius: 18px; border: 1px solid rgba(34,197,94,.15); animation: fadeUp .2s ease; }
 .card-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .card-progress-bar { height: 6px; background: var(--panel2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
 
 /* ===== AI STUDIO ===== */
 .ai-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
-.segment { display: flex; gap: 6px; padding: 6px; background: var(--panel2); border: 1px solid var(--line); bnrder-radius: var(--radius-sm); overflow-x: auto; margin-bottom: 20px; }
+.segment { display: flex; gap: 6px; padding: 6px; background: var(--panel2); border: 1px solid var(--line); border-radius: var(--radius-sm); overflow-x: auto; margin-bottom: 20px; }
 .segment-btn { border: none; background: transparent; color: var(--muted); padding: 10px 16px; border-radius: var(--radius-xs); font-weight: 700; font-size: 14px; cursor: pointer; transition: all .2s; white-space: nowrap; }
 .segment-btn.active { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; box-shadow: 0 4px 14px rgba(56,189,248,.3); }
 .field { margin-bottom: 16px; }
 .field label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
-.input, .textarea, .select { width: 100%; padding: 13px 15px; background: var(--panel2); border: 1px solid var(--line2); color: var(--text); bnrder-radius: var(--radius-sm); transition: bnrder-color .2s, bnx-shadow .2s; -webkit-appearance: nnne; }
+.input, .textarea, .select { width: 100%; padding: 13px 15px; background: var(--panel2); border: 1px solid var(--line2); color: var(--text); border-radius: var(--radius-sm); transition: border-color .2s, box-shadow .2s; -webkit-appearance: none; }
 .input:focus, .textarea:focus, .select:focus { outline: none; border-color: rgba(56,189,248,.4); box-shadow: 0 0 0 3px rgba(56,189,248,.1); }
 .textarea { min-height: 130px; resize: vertical; line-height: 1.65; }
 .select option { background: var(--panel2); }
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.notice { padding: 13px 15px; border-radius: var(--radius-sm); background: rgba(56,189,248,.07); bnrder: 1px solid rgba(56,189,248,.2); color: #bae6fd; font-size: 13px; fnnt-weight: 500; line-height: 1.6; margin: 14px 0; }
+.notice { padding: 13px 15px; border-radius: var(--radius-sm); background: rgba(56,189,248,.07); border: 1px solid rgba(56,189,248,.2); color: #bae6fd; font-size: 13px; font-weight: 500; line-height: 1.6; margin: 14px 0; }
 
 /* ===== DROPZONE ===== */
 .dropzone { border: 2px dashed var(--line2); border-radius: var(--radius-sm); padding: 30px 20px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(56,189,248,.03); position: relative; overflow: hidden; }
 .dropzone:hover, .dropzone.drag { border-color: var(--blue); background: rgba(56,189,248,.08); }
 .dropzone.loading { border-color: var(--purple); background: rgba(167,139,250,.08); }
 .dropzone-icon { font-size: 38px; margin-bottom: 10px; display: block; }
-.dropzone-text { fnnt-size: 15px; font-weight: 700; }
+.dropzone-text { font-size: 15px; font-weight: 700; }
 .dropzone-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
 .dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .dropzone .progress-line { position: absolute; bottom: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--blue), var(--purple)); border-radius: 999px; transition: width .3s ease; }
@@ -323,11 +344,11 @@ body::before {
 
 /* ===== CONFIG ===== */
 .config-section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
-.config-title { font-family: var(--font-display); fnnt-size: 17px; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.config-title { font-family: var(--font-display); font-size: 17px; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
 /* ===== NAVBAR ===== */
 .navbar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(7,13,26,.96); backdrop-filter: blur(20px); border-top: 1px solid var(--line); padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 6px; justify-content: space-around; }
-.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 8px; background: transparent; border: none; border-radius: 16px; color: var(--muted); cursor: pointer; fnnt-size: 11px; font-weight: 700; transition: all .2s; }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 9px 8px; background: transparent; border: none; border-radius: 16px; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 700; transition: all .2s; }
 .nav-btn.active { background: var(--panel2); color: var(--text); }
 .nav-btn .nav-icon { font-size: 21px; transition: transform .2s; }
 .nav-btn.active .nav-icon { transform: scale(1.15); }
@@ -339,20 +360,20 @@ body::before {
 /* ===== MODAL ===== */
 .modal-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.7); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
 .modal-overlay.active { display: flex; animation: fadeIn .2s ease; }
-@keyframes fadeIn { from{opacity:0} to{tpacity:1} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
 .modal { background: var(--panel); border: 1px solid var(--line2); border-radius: 32px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 40px 80px rgba(0,0,0,.6); animation: slideUp .3s cubic-bezier(.34,1.56,.64,1); }
 @keyframes slideUp { from{transform:translateY(40px) scale(.95);opacity:0} to{transform:none;opacity:1} }
-.modal-title { font-family: var(--font-display); fnnt-size: 22px; font-weight: 900; margin-bottom: 6px; }
+.modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 900; margin-bottom: 6px; }
 .modal-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
 .modal-close { float: right; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; margin-top: -4px; }
 .share-url { background: var(--panel2); border: 1px solid var(--line2); border-radius: var(--radius-xs); padding: 12px 14px; font-size: 13px; color: var(--blue); word-break: break-all; margin: 14px 0; }
 
 /* ===== EMPTY STATE ===== */
-.empty-state { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 15px; fnnt-weight: 500; }
+.empty-state { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 15px; font-weight: 500; }
 .empty-state .empty-icon { font-size: 52px; margin-bottom: 14px; }
 .empty-state p { margin-top: 8px; }
 
-/* ===== SEARCH ===== */
+/* ===== SEARAH ===== */
 .search-wrap { display: flex; gap: 10px; margin-bottom: 16px; }
 .search-wrap .input { flex: 1; }
 
@@ -363,7 +384,7 @@ body::before {
 /* ===== CONFETTI ===== */
 .confetti-wrap { position: fixed; inset: 0; z-index: 600; pointer-events: none; display: none; }
 .confetti-wrap.show { display: block; }
-.confetti-piece { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall 2.5s ease-in fnrwards; }
+.confetti-piece { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: confettiFall 2.5s ease-in forwards; }
 @keyframes confettiFall { from{transform:translateY(-20px) rotate(0deg);opacity:1} to{transform:translateY(100vh) rotate(720deg);opacity:0} }
 
 /* ===== USER PROFILE PILL ===== */
@@ -375,12 +396,188 @@ body::before {
 .streak-fire { animation: pulse 1s ease-in-out infinite alternate; }
 @keyframes pulse { from{filter:brightness(1)} to{filter:brightness(1.3) drop-shadow(0 0 6px #f97316)} }
 
+
+/* ===== ENHANCED ANIMATIONS & EFFECTS ===== */
+/* Aurora background animation */
+@keyframes aurora { 
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-20px) scale(1.05); }
+  66% { transform: translate(-20px,10px) scale(0.98); }
+}
+
+/* Neon glow for chips */
+.chip-streak { box-shadow: 0 0 20px rgba(251,191,36,.4); }
+.chip-xp { box-shadow: 0 0 20px rgba(56,189,248,.4); }
+
+/* Card entrance */
+@keyframes slideInUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+/* Correct answer flash */
+@keyframes correctFlash {
+  0%,100% { background: var(--panel); }
+  50% { background: rgba(34,197,94,.15); box-shadow: 0 0 30px rgba(34,197,94,.3); }
+}
+
+/* Wrong answer flash */
+@keyframes wrongFlash {
+  0%,100% { background: var(--panel); }
+  50% { background: rgba(248,113,113,.12); box-shadow: 0 0 30px rgba(248,113,113,.25); }
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+/* Pulse glow */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(56,189,248,.4); }
+  50% { box-shadow: 0 0 40px rgba(56,189,248,.7); }
+}
+
+/* Apply card entrance animation */
+.study-card {
+  animation: slideInUp 0.4s ease-out;
+}
+
+/* Streak and XP chips with neon glow */
+.chip.chip-streak {
+  box-shadow: 0 0 20px rgba(251,191,36,.4) !important;
+}
+
+.chip.chip-xp {
+  box-shadow: 0 0 20px rgba(56,189,248,.4) !important;
+}
+
+/* Vibrant progress bar with animation */
+.progress > span {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(90deg, var(--green), #4ade80, var(--green));
+  background-size: 1000px 100%;
+}
+
+/* Enhanced mascot size */
+.mascot-wrap .mascot-container {
+  width: 120px !important;
+  height: 140px !important;
+}
+
+.mascot-wrap .mascot-svg {
+  width: 120px !important;
+  height: 140px !important;
+}
+
+/* Difficulty badges with vivid colors and glow */
+.card-badge.easy {
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.4);
+  color: #4ade80;
+  box-shadow: 0 0 12px rgba(34,197,94,.25);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.card-badge.medium {
+  background: rgba(251,191,36,.12);
+  border-color: rgba(251,191,36,.4);
+  color: #fde68a;
+  box-shadow: 0 0 12px rgba(251,191,36,.25);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.card-badge.hard {
+  background: rgba(248,113,113,.12);
+  border-color: rgba(248,113,113,.4);
+  color: #fca5a5;
+  box-shadow: 0 0 12px rgba(248,113,113,.25);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Enhanced button hover effects */
+.btn {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.15);
+  box-shadow: 0 12px 24px rgba(0,0,0,.3) !important;
+}
+
+/* Enhanced button 3D effect */
+.btn-green:hover {
+  box-shadow: 0 8px 20px rgba(34,197,94,.4) !important;
+}
+
+.btn-blue:hover {
+  box-shadow: 0 8px 20px rgba(56,189,248,.4) !important;
+}
+
+.btn-purple:hover {
+  box-shadow: 0 8px 20px rgba(167,139,250,.4) !important;
+}
+
+/* Study card glow effect */
+.study-card {
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow), 0 0 30px rgba(56,189,248,.05);
+}
+
+.study-card:hover {
+  box-shadow: var(--shadow), 0 0 40px rgba(56,189,248,.15);
+}
+
+/* Enhanced trail styling */
+.trail-node {
+  transition: all 0.3s ease;
+  box-shadow: 0 0 12px rgba(0,0,0,.3);
+}
+
+.trail-node.done {
+  box-shadow: 0 0 24px rgba(34,197,94,.5), inset 0 0 12px rgba(255,255,255,.1);
+}
+
+.trail-node.active {
+  box-shadow: 0 0 24px rgba(251,191,36,.5), inset 0 0 12px rgba(255,255,255,.1);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+/* Enhanced kpi cards */
+.kpi {
+  transition: all 0.2s ease;
+}
+
+.kpi:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow), 0 0 30px rgba(56,189,248,.1);
+}
+
+/* Deck cards with smooth transitions */
+.deck-card {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.deck-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56,189,248,.4);
+  box-shadow: var(--shadow), 0 0 30px rgba(56,189,248,.15);
+}
+
+/* Speech bubble glow */
+.mascot-speech {
+  box-shadow: 0 4px 16px rgba(0,0,0,.35), 0 0 20px rgba(56,189,248,.2);
+  animation: slideInUp 0.3s ease-out;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 600px) {
   .kpi-grid { grid-template-columns: repeat(2,1fr); }
   .stats-grid { grid-template-columns: repeat(2,1fr); }
   .row-2 { grid-template-columns: 1fr; }
-  .hero-title { fnnt-size: 26px; }
+  .hero-title { font-size: 26px; }
   .card-question { font-size: 20px; }
   .auth-brand { font-size: 28px; }
 }
@@ -440,7 +637,44 @@ body::before {
         <rect x="72" y="210" width="14" height="16" rx="4" fill="#f97316"/>
         <rect x="114" y="210" width="14" height="16" rx="4" fill="#f97316"/>
         <rect x="64" y="218" width="10" height="8" rx="3" fill="#f97316"/>
-        <rect x="86" y="220" width="10" height="8" rx="3" fill="#f97316"/>
+       <ellipse cx="100" cy="158" rx="38" ry="42" fill="#9de040"/>
+        <!-- Wings -->
+        <ellipse cx="42" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(-20 42 148)"/>
+        <ellipse cx="158" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(20 158 148)"/>
+        <!-- Wing shine -->
+        <ellipse cx="38" cy="138" rx="10" ry="18" fill="#73c41e" opacity="0.5" transform="rotate(-20 38 138)"/>
+        <ellipse cx="162" cy="138" rx="10" ry="18" fill="#73c41e" opacity="0.5" transform="rotate(20 162 138)"/>
+        <!-- Head -->
+        <circle cx="100" cy="80" r="56" fill="#82d125"/>
+        <!-- Head top tuft -->
+        <ellipse cx="92" cy="28" rx="10" ry="18" fill="#6dba1f" transform="rotate(-15 92 28)"/>
+        <ellipse cx="100" cy="24" rx="8" ry="16" fill="#82d125" transform="rotate(0 100 24)"/>
+        <ellipse cx="108" cy="30" rx="7" ry="14" fill="#6dba1f" transform="rotate(15 108 30)"/>
+        <!-- Head shine -->
+        <ellipse cx="78" cy="60" rx="18" ry="12" fill="#9de040" opacity="0.4" transform="rotate(-20 78 60)"/>
+        <!-- Eyes white -->
+        <circle cx="78" cy="76" r="20" fill="white"/>
+        <circle cx="122" cy="76" r="20" fill="white"/>
+        <!-- Eye shadow -->
+        <circle cx="78" cy="78" r="17" fill="#f0f0f0"/>
+        <circle cx="122" cy="78" r="17" fill="#f0f0f0"/>
+        <!-- Pupils -->
+        <circle cx="80" cy="78" r="12" fill="#1a1a2e"/>
+        <circle cx="124" cy="78" r="12" fill="#1a1a2e"/>
+        <!-- Eye shine 1 -->
+        <circle cx="85" cy="72" r="5" fill="white"/>
+        <circle cx="129" cy="72" r="5" fill="white"/>
+        <!-- Eye shine 2 (small) -->
+        <circle cx="77" cy="81" r="2.5" fill="white" opacity="0.7"/>
+        <circle cx="121" cy="81" r="2.5" fill="white" opacity="0.7"/>
+        <!-- Beak -->
+        <path d="M 88 94 Q 100 110 112 94 Q 100 98 88 94 Z" fill="#f97316"/>
+        <path d="M 90 93 Q 100 100 110 93" fill="none" stroke="#ea6b00" stroke-width="1.5"/>
+        <!-- Feet/Claws -->
+        <rect x="72" y="210" width="14" height="16" rx="4" fill="#f97316"/>
+        <rect x="114" y="210" width="14" height="16" rx="4" fill="#f97316"/>
+        <rect x="64" y="218" width="10" height="8" rx="3" fill="#f97316"/>
+    2   <rect x="86" y="220" width="10" height="8" rx="3" fill="#f97316"/>
         <rect x="106" y="220" width="10" height="8" rx="3" fill="#f97316"/>
         <rect x="128" y="218" width="10" height="8" rx="3" fill="#f97316"/>
         <!-- Card held by left wing -->
@@ -547,70 +781,7 @@ body::before {
       </div>
       <div class="auth-err" id="regErr"></div>
       <button class="btn btn-blue btn-full" style="margin-top:8px" onclick="doRegister()">Criar conta</button>
-      <div class="auth-footer" style="margin-top:16px">
-        Já tem conta? <button class="auth-link" onclick="switchToLogin()">Entrar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== APP ===================== -->
-<div id="app">
-  <!-- TOPBAR -->
-  <header class="topbar">
-    <div class="brand">Flash<span style="color:var(--green);-webkit-text-fill-color:var(--green);">Study</span> <span style="font-size:13px;font-weight:700;color:var(--muted);-webkit-text-fill-color:var(--muted);">V6</span></div>
-    <div class="top-actions">
-      <div class="chip"><span class="streak-fire">🔥</span> <strong id="streakChip">0</strong></div>
-      <div class="chip">⭐ <strong id="xpChip">0</strong></div>
-      <div class="user-pill" onclick="go('config')">
-        <div class="user-avatar" id="userAvatar">?</div>
-        <span class="user-name" id="userNameChip">Usuário</span>
-      </div>
-    </div>
-  </header>
-
-  <!-- HOME -->
-  <main id="home" class="screen active">
-    <div class="hero">
-      <h1 class="hero-title">Continue sua jornada!</h1>
-      <p class="hero-sub">IA extrai flashcards de PDFs e slides. Estude em qualquer lugar — seus dados são seus.</p>
-      <div class="cta-row">
-        <button class="btn btn-green" onclick="startStudy()">▶ Estudar agora</button>
-        <button class="btn btn-blue" onclick="go('create')">✨ Gerar com IA</button>
-        <button class="btn btn-dark" onclick="go('library')">📚 Biblioteca</button>
-      </div>
-    </div>
-    <div class="kpi-grid">
-      <div class="kpi green"><div class="kpi-label">Cards</div><div class="kpi-value" id="kpiCards">0</div></div>
-      <div class="kpi blue"><div class="kpi-label">XP hoje</div><div class="kpi-value" id="kpiTodayXp">0</div></div>
-      <div class="kpi yellow"><div class="kpi-label">Ofensiva</div><div class="kpi-value" id="kpiStreak">0</div></div>
-      <div class="kpi purple"><div class="kpi-label">Matérias</div><div class="kpi-value" id="kpiSubjects">0</div></div>
-    </div>
-    <div class="sec-title">Missão do dia</div>
-    <div class="trail-wrap">
-      <div style="font-family:var(--font-display);font-size:20px;font-weight:900">Trilha de aprendizado</div>
-      <div style="color:var(--muted);font-size:13px;margin-top:4px">Complete cada nó para avançar</div>
-      <div class="trail-nodes" id="trailNodes"></div>
-      <div class="progress"><span id="dailyProgress" style="width:0%"></span></div>
-      <div style="color:var(--muted);font-size:13px;font-weight:600;margin-top:8px" id="dailyText">0/20 XP hoje</div>
-    </div>
-    <div id="mascotWrap" class="mascot-wrap">
-      <div class="mascot-container" id="appMascotContainer">
-        <svg class="mascot-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="100" cy="215" rx="55" ry="8" fill="rgba(0,0,0,0.3)"/>
-          <ellipse cx="100" cy="155" rx="62" ry="65" fill="#6dba1f"/><ellipse cx="100" cy="145" rx="58" ry="58" fill="#82d125"/>
-          <ellipse cx="100" cy="158" rx="38" ry="42" fill="#9de040"/>
-          <ellipse cx="42" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(-20 42 148)"/>
-          <ellipse cx="158" cy="148" rx="24" ry="38" fill="#5ea818" transform="rotate(20 158 148)"/>
-          <circle cx="100" cy="80" r="56" fill="#82d125"/>
-          <ellipse cx="92" cy="28" rx="10" ry="18" fill="#6dba1f" transform="rotate(-15 92 28)"/>
-          <ellipse cx="100" cy="24" rx="8" ry="16" fill="#82d125"/>
-          <ellipse cx="108" cy="30" rx="7" ry="14" fill="#6dba1f" transform="rotate(15 108 30)"/>
-          <circle cx="78" cy="76" r="20" fill="white"/><circle cx="122" cy="76" r="20" fill="white"/>
-          <circle cx="80" cy="78" r="12" fill="#1a1a2e"/><circle cx="124" cy="78" r="12" fill="#1a1a2e"/>
-          <circle cx="85" cy="72" r="5" fill="white"/><circle cx="129" cy="72" r="5" fill="white"/>
-          <path d="M 88 94 Q 100 110 112 94 Q 100 98 88 94 Z" fill="#f97316"/>
-          <rect x="72" cy="210" width="14" height="16" rx="4" fill="#f97316"/>
+      <dfill="#f97316"/>
           <rect x="72" y="210" width="14" height="16" rx="4" fill="#f97316"/>
           <rect x="114" y="210" width="14" height="16" rx="4" fill="#f97316"/>
           <rect x="30" y="145" width="60" height="50" rx="8" fill="#f5f0e0" stroke="#d4b86a" stroke-width="2"/>
@@ -706,7 +877,7 @@ body::before {
       </div>
 
       <div class="row-2">
-        <div class="field"><label>Matéria</label><input id="subjectInput" class="input" placeholder="Ex.: Direito Empresarial"></div>
+        <div class="field"><label>Patéria</label><input id="subjectInput" class="input" placeholder="Ex.: Direito Empresarial"></div>
         <div class="field"><label>Tema</label><input id="topicInput" class="input" placeholder="Ex.: Títulos de Crédito"></div>
       </div>
       <div class="field">
@@ -747,7 +918,7 @@ body::before {
       <div class="kpi blue"><div class="kpi-label">Meta diária</div><div class="kpi-value" id="statGoal">20</div></div>
     </div>
     <div class="sec-title">Por matéria</div>
-    <div id="subjectStats" class="deck-grid"></div>
+    <div id="subjectStats" class="deck-grid" id="subjectStatsList"></div>
   </main>
 
   <!-- CONFIG -->
@@ -785,6 +956,9 @@ body::before {
           <li>Cole no campo 💎 Gemini abaixo e clique em <strong style="color:var(--green)">Salvar</strong></li>
         </ol>
         <div style="margin-top:8px;font-size:12px;color:var(--green);font-weight:600">✅ Plano gratuito: 1.500 requests/dia com gemini-1.5-flash</div>
+      </div>
+      <div style="margin-bottom:14px;padding:12px;border-radius:12px;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.15);font-size:12px;color:var(--muted);line-height:1.6">
+        <strong style="color:var(--text)">Como obter:</strong> Crie conta em <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue);font-weight:700">console.anthropic.com</a>, acesse Workspaces, crie uma chave API e copie aqui.
       </div>
       <div class="field">
         <label>🤖 Claude (Anthropic)</label>
@@ -869,7 +1043,7 @@ body::before {
     <button class="nav-btn" id="nav-library" onclick="go('library',this)"><span class="nav-icon">📚</span>Biblioteca</button>
     <button class="nav-btn" id="nav-study" onclick="go('study',this)"><span class="nav-icon">🎯</span>Estudar</button>
     <button class="nav-btn" id="nav-create" onclick="go('create',this)"><span class="nav-icon">✨</span>IA</button>
-    <button class="nav-btn" id="nav-stats" onclick="go('stats',this)"><span class="nav-icon">📊</span>Stats</button>
+    <button class="nav-btn" id="nav-stats" onclick="go('stats',this)"><span class="nav-icon">🍊</span>Stats</button>
   </nav>
 </div>
 
@@ -898,7 +1072,7 @@ body::before {
     <div class="field"><label>Resposta</label><textarea id="mcAnswer" class="textarea" style="min-height:80px" placeholder="Escreva a resposta completa"></textarea></div>
     <div class="field"><label>Dificuldade</label>
       <select id="mcDifficulty" class="select">
-        <option value="fácil">😊 Fácil</option>
+        <option value="gácil">😊 Fácil</option>
         <option value="médio" selected>😐 Médio</option>
         <option value="difícil">😤 Difícil</option>
       </select>
@@ -972,7 +1146,7 @@ async function doLogin() {
     if (e.code==='auth/user-not-found'||e.code==='auth/invalid-credential'||e.code==='auth/invalid-email') {
       showAuthErr('loginErr','Usuário não encontrado. Crie uma conta.');
       setMascotState('loginMascot','state-worried');
-    } else if (e.code==='auth/wrong-password') {
+    } else if (e.code==='auth/wrong-roleword') {
       showAuthErr('loginErr','Senha incorreta.');
       setMascotState('loginMascot','state-sad');
     } else {
@@ -1228,6 +1402,14 @@ function recordStudyActivity() {
     _app.stats.lastStudyDate = today;
   }
 }
+function mascotClick() {
+  const mascot = document.getElementById('appMascotContainer') || document.getElementById('loginMascot');
+  if (!mascot) return;
+  mascot.classList.toggle('bounce');
+  const moods = ['Pronto para estudar!', 'Voce consegue!', 'Estudar eh legal!', 'Vamos aprender!'];
+  showMascotSpeech(moods[Math.floor(Math.random() * moods.length)]);
+}
+
 function updateChips() {
   checkDailyReset();
   document.getElementById('streakChip').textContent = _app.stats.streak || 0;
@@ -1296,10 +1478,59 @@ function renderHome() {
   // Decks
   const container = document.getElementById('homeDecks');
   if (!decks.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><strong>Nenhum deck ainda</strong><p>Vá em ✨ IA para gerar seus primeiros flashcards</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><strong>Nenhum deck ainda</strong><p>Vá em ✨ IA para gerar seus primeiros flashcards</p></div>`;
     return;
   }
   container.innerHTML = decks.slice(0,5).map(d => deckCardHTML(d)).join('');
+}
+
+function renderDailyReview() {
+  const reviewContainer = document.getElementById('dailyReview');
+  if (!reviewContainer) return;
+  
+  // Get cards needing most review - sorted by highest wrong rate, then least recently studied
+  const cardsNeedingReview = _app.cards.filter(c => {
+    const total = (c.correct||0) + (c.wrong||0);
+    return total > 0; // Only cards that have been studied
+  }).sort((a, b) => {
+    const totalA = (a.correct||0) + (a.wrong||0);
+    const totalB = (b.correct||0) + (b.wrong||0);
+    const rateA = (a.wrong||0) / totalA;
+    const rateB = (b.wrong||0) / totalB;
+    
+    // First sort by wrong rate (higher = needs more review)
+    if (Math.abs(rateA - rateB) > 0.05) return rateB - rateA;
+    
+    // Then by recency
+    return (b.lastStudied||0) - (a.lastStudied||0);
+  }).slice(0, 20);
+  
+  if (!cardsNeedingReview.length) {
+    reviewContainer.innerHTML = '<div style="text-align:center;padding:24px;color:var(--green);font-weight:700">✅ Tudo em dia!</div>';
+    return;
+  }
+  
+  const cardsHtml = cardsNeedingReview.map(c => {
+    const total = (c.correct||0) + (c.wrong||0);
+    const wrongRate = Math.round((c.wrong||0)/total*100);
+    const diffClass = c.difficulty==='fácil'?'easy':c.difficulty==='difícil'?'hard':'medium';
+    
+    return `<div style="padding:12px;border-bottom:1px solid var(--line);cursor:pointer;transition:all 0.2s" onclick="startStudySession([_app.cards.find(x=>x.id===\'${c.id}\')])" onmouseover="this.style.background='var(--panel2)'" onmouseout="this.style.background=''">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px">${esc(c.question.substring(0,40))}...</div>
+          <div style="font-size:12px;color:var(--muted)">${esc(c.subject)} › ${esc(c.topic)}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="card-badge ${diffClass}" style="font-size:11px">${c.difficulty||'médio'}</span>
+          <span style="color:var(--red);font-weight:700;font-size:13px">${wrongRate}% erros</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  
+  reviewContainer.innerHTML = `<div>${cardsHtml}</div>
+    <button class="btn btn-green" style="width:100%;margin-top:12px" onclick="startStudySession(${JSON.stringify(cardsNeedingReview)})">▶ Iniciar Revisão</button>`;
 }
 
 function deckSummaries() {
@@ -1384,9 +1615,33 @@ function startStudy() {
   const sorted = [..._app.cards].sort((a,b)=>((b.wrong||0)/(b.correct+b.wrong+1))-((a.wrong||0)/(a.correct+a.wrong+1)));
   startStudySession(sorted.slice(0,20));
 }
+function startWrongReview() {
+  const wrongCards = _app.cards.filter(c => {
+    const total = (c.correct||0) + (c.wrong||0);
+    const wrongRate = (c.wrong||0) / (total||1);
+    return (c.wrong||0) > (c.correct||0) || wrongRate > 0.3;
+  });
+  
+  if (!wrongCards.length) {
+    show('Nenhum card com desempenho ruim!');
+    return;
+  }
+  
+  // Sort by worst performance first
+  wrongCards.sort((a, b) => {
+    const totalA = (a.correct||0) + (a.wrong||0);
+    const totalB = (b.correct||0) + (b.wrong||0);
+    const rateA = (a.wrong||0) / (totalA||1);
+    const rateB = (b.wrong||0) / (totalB||1);
+    return rateB - rateA;
+  });
+  
+  startStudySession(wrongCards);
+}
+
 function startStudySession(cards) {
   const shuffled = [...cards].sort(()=>Math.random()-.5);
-  studyState = { cards:shuffled, index:0, correct:0, wrong:0, revealed:false };
+  studyState = { cards:shuffled, index:0, correct:0, wrong:0, revealed:false, streak:0 };
   go('study', document.getElementById('nav-study'));
   renderStudy();
 }
@@ -1435,25 +1690,65 @@ function autoAdjustDifficulty(card) {
 }
 function answerStudy(ok) {
   const c = studyState.cards[studyState.index];
+  
+  // Initialize streak counter if not exists
+  if (!studyState.streak) studyState.streak = 0;
+  
   if (ok) {
     c.correct=(c.correct||0)+1; _app.stats.correct=(_app.stats.correct||0)+1;
     _app.stats.xp=(_app.stats.xp||0)+10; _app.stats.todayXp=(_app.stats.todayXp||0)+10;
     studyState.correct++;
+    studyState.streak = (studyState.streak||0) + 1;
+    
+    // Trigger mascot animation and speech
+    const mascot = document.getElementById('appMascotContainer');
+    if (mascot) {
+      mascot.classList.remove('bounce');
+      void mascot.offsetWidth; // Trigger reflow
+      mascot.classList.add('bounce');
+      
+      // Show speech bubble
+      const speeches = ['🔥 Ótimo!', '⭐ Certo!', '💯 Excelente!'];
+      const speech = speeches[Math.floor(Math.random() * speeches.length)];
+      showMascotSpeech(speech);
+    }
+    
+    // Check for 3-streak milestone
+    if (studyState.streak === 3) {
+      showMascotSpeech('🔥🔥🔥 Sequência!');
+    }
   } else {
-    c.wrong=(c.wrong||0)+1; _app.stats.wrong=(_app.stats.wrong||0)+1; studyState.wrong++;
+    c.wrong=(c.wrong||0)+1; _app.stats.wrong=(_app.stats.wrong||0)+1; 
+    studyState.wrong++;
+    studyState.streak = 0;
+    
+    // Trigger mascot sad animation
+    const mascot = document.getElementById('appMascotContainer');
+    if (mascot) {
+      mascot.classList.add('state-sad');
+      showMascotSpeech('💪 Continue!');
+      setTimeout(() => mascot.classList.remove('state-sad'), 800);
+    }
   }
-  autoAdjustDifficulty(c); // auto-adjust difficulty based on error rate
-  recordStudyActivity();   // update streak only when actually studying
+  
+  autoAdjustDifficulty(c);
+  recordStudyActivity();
   const idx = _app.cards.findIndex(x=>x.id===c.id);
   if (idx>=0) _app.cards[idx]=c;
   studyState.index++; studyState.revealed=false;
   save(); updateChips(); renderStudy();
 }
-
 function renderSessionEnd() {
   const acc = studyState.correct+studyState.wrong;
   const pct = acc?Math.round(studyState.correct/acc*100):0;
-  if (pct>=80) showConfetti();
+  if (pct>=80) {
+    showConfetti();
+    const mascot = document.getElementById('appMascotContainer');
+    if (mascot) {
+      mascot.classList.add('state-fire');
+      showMascotSpeech('🏆 Incrível!');
+    }
+  }
   document.getElementById('studyWrap').innerHTML = `
     <div class="trail-wrap" style="text-align:center">
       <div style="font-size:56px;margin-bottom:8px">${pct>=80?'🏆':pct>=50?'⭐':'💪'}</div>
@@ -1484,43 +1779,103 @@ function renderEmptyStudy() {
 // =============================================
 // STATS
 // =============================================
+
 function renderStats() {
-  if (!_app) return;
-  const lvl = Math.floor(Math.sqrt((_app.stats.xp||0)/50))+1;
-  document.getElementById('statXp').textContent = _app.stats.xp||0;
-  document.getElementById('statStreak').textContent = _app.stats.streak||0;
-  document.getElementById('statCorrect').textContent = _app.stats.correct||0;
-  document.getElementById('statWrong').textContent = _app.stats.wrong||0;
-  document.getElementById('statLevel').textContent = lvl;
-  document.getElementById('statGoal').textContent = _app.stats.dailyGoal||20;
-
-  const bySubj = {};
+  // Original stats display
+  document.getElementById('statXp').textContent = (_app.stats.xp||0);
+  document.getElementById('statStreak').textContent = (_app.stats.streak||0);
+  document.getElementById('statCorrect').textContent = (_app.stats.correct||0);
+  document.getElementById('statWrong').textContent = (_app.stats.wrong||0);
+  const level = Math.floor((_app.stats.xp||0) / 100) + 1;
+  document.getElementById('statLevel').textContent = level;
+  document.getElementById('statGoal').textContent = _app.goals?.daily || 20;
+  
+  // Render subject statistics
+  const subjectStats = {};
   _app.cards.forEach(c => {
-    if (!bySubj[c.subject]) bySubj[c.subject]={correct:0,wrong:0,total:0};
-    bySubj[c.subject].total++;
-    bySubj[c.subject].correct+=(c.correct||0);
-    bySubj[c.subject].wrong+=(c.wrong||0);
+    if (!subjectStats[c.subject]) {
+      subjectStats[c.subject] = { correct: 0, wrong: 0, cards: 0, lastStudied: 0 };
+    }
+    subjectStats[c.subject].correct += (c.correct||0);
+    subjectStats[c.subject].wrong += (c.wrong||0);
+    subjectStats[c.subject].cards++;
+    subjectStats[c.subject].lastStudied = Math.max(subjectStats[c.subject].lastStudied, c.lastStudied||0);
   });
-  document.getElementById('subjectStats').innerHTML = Object.entries(bySubj).map(([subj,s])=>{
-    const mastery = s.correct+s.wrong>0?Math.round(s.correct/(s.correct+s.wrong)*100):0;
-    return `<div class="deck-card" style="flex-direction:column;gap:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-weight:700">${subjectIcon(subj)} ${esc2(subj)}</div>
-        <span style="font-size:13px;font-weight:700;color:var(--green)">${mastery}%</span>
+  
+  // Calculate overall accuracy
+  const totalCorrect = _app.stats.correct || 0;
+  const totalWrong = _app.stats.wrong || 0;
+  const totalAnswers = totalCorrect + totalWrong;
+  const overallAccuracy = totalAnswers ? Math.round(totalCorrect / totalAnswers * 100) : 0;
+  
+  // Sort subjects by accuracy
+  const sortedSubjects = Object.entries(subjectStats)
+    .map(([name, stats]) => {
+      const accuracy = (stats.correct + stats.wrong) ? Math.round(stats.correct / (stats.correct + stats.wrong) * 100) : 0;
+      return { name, ...stats, accuracy };
+    })
+    .sort((a, b) => b.accuracy - a.accuracy);
+  
+  // Find best and worst subjects
+  const bestSubject = sortedSubjects.find(s => s.cards > 0);
+  const worstSubject = [...sortedSubjects].reverse().find(s => s.cards > 0);
+  
+  // Build subject stats HTML with study buttons
+  const subjectHtml = sortedSubjects.map(s => {
+    const barWidth = (s.accuracy || 0);
+    return `<div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700;margin-bottom:2px">${esc(s.name)}</div>
+          <div style="font-size:12px;color:var(--muted)">${s.cards} cards</div>
+        </div>
+        <div style="font-weight:700;color:${s.accuracy >= 80 ? 'var(--green)' : s.accuracy >= 50 ? 'var(--yellow)' : 'var(--red)'}">${s.accuracy}%</div>
       </div>
-      <div style="font-size:13px;color:var(--muted)">✅ ${s.correct} acertos • ❌ ${s.wrong} erros • 📚 ${s.total} cards</div>
-      <div class="progress"><span style="width:${mastery}%"></span></div>
+      <div class="progress" style="margin-bottom:10px"><span style="width:${barWidth}%;background:linear-gradient(90deg,${s.accuracy >= 80 ? 'var(--green)' : s.accuracy >= 50 ? 'var(--yellow)' : 'var(--red)'}, ${s.accuracy >= 80 ? '#4ade80' : s.accuracy >= 50 ? '#fde68a' : '#fca5a5'})"></span></div>
+      <button class="btn btn-blue btn-sm" onclick="filterAndStudy('${esc(s.name)}')">Estudar esta materia</button>
     </div>`;
-  }).join('') || `<div class="empty-state"><div class="empty-icon">📊</div><strong>Nenhum dado ainda</strong></div>`;
+  }).join('');
+  
+  // Add highlights
+  let highlightsHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">';
+  if (bestSubject) {
+    highlightsHtml += `<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:var(--radius);padding:14px;text-align:center">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">MATERIA MAIS DOMINADA</div>
+      <div style="font-weight:700;color:var(--green)">${esc(bestSubject.name)}</div>
+    </div>`;
+  }
+  if (worstSubject && worstSubject !== bestSubject) {
+    highlightsHtml += `<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:var(--radius);padding:14px;text-align:center">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">PRECISA DE ATENCAO</div>
+      <div style="font-weight:700;color:var(--red)">${esc(worstSubject.name)}</div>
+    </div>`;
+  }
+  highlightsHtml += '</div>';
+  
+  // Add accuracy circle
+  const accuracyColor = overallAccuracy >= 80 ? 'var(--green)' : overallAccuracy >= 50 ? 'var(--yellow)' : 'var(--red)';
+  highlightsHtml += `<div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:20px">
+    <div style="font-weight:700;font-size:11px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">PRECISAO GERAL</div>
+    <div style="width:120px;height:120px;margin:0 auto 12px;border:8px solid ${accuracyColor};border-radius:50%;display:flex;align-items:center;justify-content:center">
+      <div style="font-size:36px;font-weight:900;color:${accuracyColor}">${overallAccuracy}%</div>
+    </div>
+  </div>`;
+  
+  const container = document.getElementById('subjectStats');
+  if (container) {
+    container.innerHTML = highlightsHtml + subjectHtml;
+  }
 }
 
-// =============================================
-// FILE EXTRACTION
-// =============================================
-async function handleFileSelect() {
-  const file = document.getElementById('fileInput').files[0];
-  if (file) await processFile(file);
+function filterAndStudy(subject) {
+  const filtered = _app.cards.filter(c => c.subject === subject);
+  if (!filtered.length) {
+    show('Nenhum card nessa materia');
+    return;
+  }
+  startStudySession(filtered);
 }
+
 function dzDrag(e,on) { e.preventDefault(); document.getElementById('dropzone').classList.toggle('drag',on); }
 async function dzDrop(e) {
   e.preventDefault(); document.getElementById('dropzone').classList.remove('drag');
@@ -1605,171 +1960,68 @@ function getActiveKey() {
 }
 
 // =============================================
+// AI GENERATION
+// =============================================
 // FREE MODE — Local Smart Extraction (no API key)
 // =============================================
 function generateFreeCards(text, subject, topic, count) {
-  const sentences = text
-    .replace(/\r\n/g,'\n')
-    .split(/(?<=[.!?])\s+|\n+/)
-    .map(s=>s.trim())
-    .filter(s=>s.length>30 && s.length<600);
-
+  const lines = text.split('\n').filter(l => l.trim());
   const cards = [];
-  const used = new Set();
-
-  // Pattern 1 — Definitions: "X é/são/significa/define-se como Y"
-  const defPatterns = [
-    /^(.{5,60}?)\s+(?:é|são|significa|refere-se a|consiste em|define-se como|entende-se por|caracteriza-se por)\s+(.{10,300}[.!?]?)$/i,
-    /^(.{5,60}?)\s*[:—–]\s*(.{10,300}[.!?]?)$/
-  ];
-  for (const sent of sentences) {
-    if (cards.length >= Math.ceil(count*0.45)) break;
-    for (const pat of defPatterns) {
-      const m = sent.match(pat);
-      if (m && !used.has(sent.slice(0,30))) {
-        const term = m[1].replace(/^[•\-\d.]+\s*/, '').trim();
-        const def  = m[2].trim();
-        if (term.split(' ').length <= 10 && def.length > 15) {
-          cards.push({ question:`O que é/são ${term}?`, answer:def, difficulty:'médio' });
-          used.add(sent.slice(0,30)); break;
+  
+  for (let i = 0; i < lines.length - 1; i++) {
+    const line = lines[i].trim();
+    const nextLine = lines[i+1].trim();
+    
+    // Pattern 1: Numbered lists (1. Question... 2. Answer...)
+    if (/^\d+\.\s/.test(line)) {
+      const num = parseInt(line.match(/^(\d+)/)[1]);
+      if (num % 2 === 1 && nextLine && /^\d+\.\s/.test(nextLine)) {
+        const nextNum = parseInt(nextLine.match(/^(\d+)/)[1]);
+        if (nextNum === num + 1) {
+          const q = line.replace(/^\d+\.\s*/, '').trim();
+          const a = nextLine.replace(/^\d+\.\s*/, '').trim();
+          if (q && a && q.length > 3 && a.length > 3) {
+            cards.push({ question: q, answer: a });
+            i++;
+          }
         }
       }
     }
-  }
-
-  // Pattern 2 — Lists: capture header + items
-  const listBlocks = text.match(/([^\n]{5,80})\n((?:\s*[•\-\*\d]+[.)]\s*.+\n?){2,8})/g) || [];
-  for (const block of listBlocks) {
-    if (cards.length >= Math.ceil(count*0.7)) break;
-    const lines = block.split('\n').filter(l=>l.trim());
-    const header = lines[0].replace(/[:?]+$/, '').trim();
-    const items  = lines.slice(1).map(l=>l.replace(/^[\s•\-\*\d.)+]+/,'').trim()).filter(Boolean);
-    if (items.length >= 2 && !used.has(header.slice(0,25))) {
-      cards.push({
-        question: `Quais são os elementos/características de: ${header}?`,
-        answer: items.map((it,i)=>`${i+1}. ${it}`).join('\n'),
-        difficulty: items.length > 4 ? 'difícil' : 'médio'
-      });
-      used.add(header.slice(0,25));
+    
+    // Pattern 2: Bold term patterns (**Term**: definition)
+    if (/^\*\*[^*]+\*\*\s*:/.test(line)) {
+      const parts = line.split(':');
+      if (parts.length >= 2) {
+        const q = parts[0].replace(/\*\*/g, '').trim();
+        const a = parts.slice(1).join(':').trim();
+        if (q && a && q.length > 2 && a.length > 3) {
+          cards.push({ question: q, answer: a });
+        }
+      }
+    }
+    
+    // Pattern 3: Pergunta:/Resposta: explicit markers
+    if (/Pergunta\s*:/i.test(line) && /Resposta\s*:/i.test(nextLine)) {
+      const q = line.replace(/Pergunta\s*:/i, '').trim();
+      const a = nextLine.replace(/Resposta\s*:/i, '').trim();
+      if (q && a && q.length > 3 && a.length > 3) {
+        cards.push({ question: q, answer: a });
+        i++;
+      }
     }
   }
-
-  // Pattern 3 — Important sentences (long, information-dense)
-  const stopWords = new Set(['de','do','da','dos','das','em','no','na','nos','nas','a','o','e','é','que','para','com','por','um','uma','se','ou','mas','como','ao','à','isso','este','esta','esse','essa','seu','sua','seus','suas','foi','ser','ter','tem','mais','também','sobre','quando','onde','há','já','muito','cada','entre','pelos','pelas','pelo','pela','numa','num']);
-  const scored = sentences.filter(s=>!used.has(s.slice(0,30))).map(s=>{
-    const words = s.toLowerCase().split(/\s+/).filter(w=>w.length>3 && !stopWords.has(w));
-    const score = words.length + (s.includes(':') ? 5 : 0) + (/\d/.test(s) ? 3 : 0);
-    return { s, score };
-  }).sort((a,b)=>b.score-a.score);
-
-  const questionStarters = ['Explique:', 'O que significa:', 'Como ocorre:', 'Qual o papel de:', 'Por que:', 'Descreva:'];
-  let qi = 0;
-  for (const { s } of scored) {
-    if (cards.length >= count) break;
-    if (used.has(s.slice(0,30))) continue;
-    const starter = questionStarters[qi % questionStarters.length]; qi++;
-    const shortQ = s.length > 120 ? s.slice(0, s.indexOf(' ', 100)) + '...' : s;
-    cards.push({ question:`${starter} ${shortQ}`, answer:s, difficulty:'fácil' });
-    used.add(s.slice(0,30));
-  }
-
-  // Trim to requested count
-  return cards.slice(0, count);
+  
+  // Remove duplicates and limit to count
+  const unique = [...new Set(cards.map(c => c.question))].slice(0, count);
+  return cards.filter((c, idx) => unique.indexOf(c.question) === idx).slice(0, count).map(c => ({
+    subject: subject||'Sem matéria',
+    topic: topic||'Sem tema',
+    question: c.question,
+    answer: c.answer,
+    difficulty: 'médio',
+    tags: []
+  }));
 }
-
-async function generateCards() {
-  const provider=_app.settings.provider||'gemini';
-  const isFree = provider === 'free';
-  const apiKey = isFree ? '' : (getActiveKey()||document.getElementById('apiKey').value.trim());
-  const model=document.getElementById('modelSelect').value;
-  const subject=document.getElementById('subjectInput').value.trim()||'Geral';
-  const topic=document.getElementById('topicInput').value.trim()||'Conteúdo';
-  const count=Number(document.getElementById('countInput').value||10);
-  const source=document.getElementById('sourceText').value.trim();
-
-  if (!isFree && !apiKey) { toast('⚠️ Cole sua chave de API ou use o Modo Gratuito 🆓'); return; }
-  if (!source) { toast('⚠️ Extraia ou cole o conteúdo primeiro'); return; }
-
-  const btn=document.getElementById('generateBtn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Gerando...';
-
-  try {
-    let rawCards=[];
-
-    if (isFree) {
-      // Local smart extraction — no API
-      await new Promise(r=>setTimeout(r,600)); // small delay for UX
-      rawCards = generateFreeCards(source, subject, topic, count);
-      if (!rawCards.length) throw new Error('Não foi possível extrair flashcards. Tente com um texto mais estruturado (definições, listas, tópicos).');
-    } else {
-      const prompt=`Você é um especialista em criação de flashcards educacionais. Com base no texto abaixo, crie exatamente ${count} flashcards sobre "${topic}" de "${subject}".
-
-Retorne APENAS um JSON válido, sem markdown, sem explicação, no formato:
-{"cards":[{"question":"...","answer":"...","difficulty":"fácil|médio|difícil"}]}
-
-Texto:
-${source.slice(0,12000)}`;
-
-      let raw='';
-      if (provider==='claude') raw=await callClaude(apiKey,model,prompt);
-      else if (provider==='openai') raw=await callOpenAI(apiKey,model,prompt);
-      else raw=await callGemini(apiKey,model,prompt);
-
-      const m=raw.match(/\{[\s\S]*\}/);
-      if (!m) throw new Error('Resposta da IA não é JSON válido');
-      const data=JSON.parse(m[0]);
-      rawCards = data.cards||[];
-      if (!rawCards.length) throw new Error('Nenhum card gerado');
-    }
-
-    const newCards=rawCards.map(c=>({
-      id:generateId(), subject, topic,
-      question:c.question, answer:c.answer,
-      difficulty:c.difficulty||'médio',
-      correct:0, wrong:0, createdAt:Date.now()
-    }));
-    _app.cards.push(...newCards);
-    save(); rerender();
-    toast(`✅ ${newCards.length} flashcards criados!${isFree?' (Modo Gratuito)':''}`);
-    go('library');
-  } catch(err) {
-    toast('❌ Erro: '+err.message);
-    console.error(err);
-  } finally {
-    btn.disabled=false; btn.innerHTML='✨ Gerar flashcards';
-  }
-}
-
-async function callClaude(key,model,prompt) {
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model,max_tokens:4096,messages:[{role:'user',content:prompt}]})
-  });
-  if (!r.ok) { const e=await r.json(); throw new Error(e.error?.message||'Erro Claude API'); }
-  const d=await r.json(); return d.content[0].text;
-}
-
-async function callOpenAI(key,model,prompt) {
-  const r=await fetch('https://api.openai.com/v1/chat/completions',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-    body:JSON.stringify({model,max_tokens:4096,messages:[{role:'user',content:prompt}]})
-  });
-  if (!r.ok) { const e=await r.json(); throw new Error(e.error?.message||'Erro OpenAI API'); }
-  const d=await r.json(); return d.choices[0].message.content;
-}
-
-async function callGemini(key,model,prompt) {
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
-  });
-  if (!r.ok) { const e=await r.json(); throw new Error(e.error?.message||'Erro Gemini API'); }
-  const d=await r.json(); return d.candidates[0].content.parts[0].text;
-}
-
 function clearComposer() {
   document.getElementById('sourceText').value='';
   document.getElementById('subjectInput').value='';
@@ -1807,14 +2059,14 @@ function renderKeyStatuses() {
   if (!currentUser) return;
   const keys=loadKeys();
   [['claude','keyClaude','Claude'],['openai','keyOpenai','Openai'],['gemini','keyGemini','Gemini']].forEach(([p,inputId,label])=>{
-    const statusEl=document.getElementById('keyStatus++label);
+    const statusEl=document.getElementById('keyStatus'+label);
     const inputEl=document.getElementById(inputId);
     if (keys[p]) {
       const masked=keys[p].slice(0,8)+'••••••••'+keys[p].slice(-4);
-      if (statusEl) statusEl.innerHTML=`<span style="color:var(--green)">✅ Salva:</span> ${masked}`;
+      if (statusEl) statusEl.innerHTML<`<span style="color:var(--green)">✅ Salva:</span> ${masked}`;
       if (inputEl&&!inputEl.value) inputEl.value=keys[p];
     } else {
-      if (statusEl) statusEl.innerHTML=`<span style="color:var(--muted)">Nenhuma chave salva</span>`;
+      if (statusEl) statusEl.innerHTML<`<span style="color:var(--muted)">Nenhuma chave salva</span>`;
     }
   });
 }
@@ -1827,7 +2079,7 @@ function updateKeyStatus() {
     if (banner) { banner.style.display='flex'; document.getElementById('apiKeyBannerText').textContent=`Chave ${_app.settings.provider||'claude'} salva • ${key.slice(0,8)}••••`; }
   } else {
     if (dot) dot.textContent='⚠️';
-    if (banner) banner.style.display='nnne';
+    if (banner) banner.style.display='none';
   }
 }
 function toggleVisible(inputId,btn) {
@@ -1855,7 +2107,7 @@ function setProvider(p) {
     if (keys[p]) { _app.settings.apiKey=keys[p]; document.getElementById('apiKey').value=keys[p]; }
   }
   save();
-  document.querySelectorAll('.segment-btn').fnrEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  document.querySelectorAll('.segment-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
   const sel=document.getElementById('modelSelect');
   sel.innerHTML=(MODELS[p]||[]).map(m=>`<option value="${m}">${m==='local-smart-v1'?'Extração Inteligente Local':m}</option>`).join('');
   if (!isFree) { const vm=MODELS[p]||[]; sel.value=vm.includes(_app.settings.model)?_app.settings.model:(vm[0]||''); _app.settings.model=sel.value; updateKeyStatus(); }
@@ -1923,7 +2175,7 @@ function copyShare() {
 // =============================================
 function exportData() {
   const blob=new Blob([JSON.stringify({..._app,exportedAt:new Date().toISOString(),user:currentUser.email},null,2)],{type:'application/json'});
-  const b=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`flashstudy_${currentUser.email}_${Date.now()}.json`; a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`flashstudy_${currentUser.email}_${Date.now()}.json`; a.click();
   toast('Backup exportado!');
 }
 function importData(e) {
@@ -1974,10 +2226,10 @@ function initInteractiveMascot() {
   // Add blink overlays to SVG (covers eyes with head color)
   const svg = mascot.querySelector('.mascot-svg');
   if (svg) {
-    const ns = 'http://www.w3.org/2000/svg');
-    [ cx:78, id:'blinkL' }, { cx:122, id:'blinkR' }].forEach(cfg => {
+    const ns = 'http://www.w3.org/2000/svg';
+    [{ cx:78, id:'blinkL' }, { cx:122, id:'blinkR' }].forEach(cfg => {
       const el = document.createElementNS(ns, 'ellipse');
-      el.setAttribute('cx', #fg.cx); el.setAttribute('cy', '76');
+      el.setAttribute('cx', cfg.cx); el.setAttribute('cy', '76');
       el.setAttribute('rx', '21'); el.setAttribute('ry', '0');
       el.setAttribute('fill', '#82d125'); el.setAttribute('id', cfg.id);
       el.style.transformOrigin = cfg.cx + 'px 76px';
@@ -1986,7 +2238,7 @@ function initInteractiveMascot() {
   }
 
   // Messages shown on click
-  const mses = ['Vamos lá! 🚀','Você consegue! 💪','Foco total! 🎯','Incrível! ⭐','Olá! 👋','Vai lá! 🔥','Topzera! 😎','Estude com alegria! 📚'];
+  const msgs = ['Vamos lá! 🚀','Você consegue! 💪','Foco total! 🎯','Incrível! ⭐','Olá! 👋','Vai lá! 🔥','Topzera! 😎','Estude com alegria! 📚'];
   mascot.addEventListener('click', function() {
     this.classList.remove('bounce');
     void this.offsetWidth; // force reflow
@@ -1994,7 +2246,7 @@ function initInteractiveMascot() {
     setTimeout(() => this.classList.remove('bounce'), 600);
     const speech = document.getElementById('mascotSpeech');
     if (speech) {
-      speech.textContent = mses[Math.floor(Math.random() * msgs.length)];
+      speech.textContent = msgs[Math.floor(Math.random() * msgs.length)];
       speech.classList.add('show');
       clearTimeout(speech._t);
       speech._t = setTimeout(() => speech.classList.remove('show'), 2200);
@@ -2035,7 +2287,7 @@ function openCreateCardModal() {
   document.getElementById('mcTopic').value = '';
   document.getElementById('mcQuestion').value = '';
   document.getElementById('mcAnswer').value = '';
-  document.getElementById('mcDifficult=').value = 'médio';
+  document.getElementById('mcDifficulty').value = 'médio';
   document.getElementById('manualCardModal').classList.add('active');
 }
 function saveManualCard() {
@@ -2044,7 +2296,7 @@ function saveManualCard() {
   const question = document.getElementById('mcQuestion').value.trim();
   const answer = document.getElementById('mcAnswer').value.trim();
   const difficulty = document.getElementById('mcDifficulty').value;
-  if (!subject || !topic || !question || !answer) { toast('⚠︎ Preencha todos os campos'); return; }
+  if (!subject || !topic || !question || !answer) { toast('⚠️ Preencha todos os campos'); return; }
   const card = { id:generateId(), subject, topic, question, answer, difficulty, correct:0, wrong:0, createdAt:Date.now() };
   _app.cards.push(card);
   save(); renderLibrary(); renderHome(); renderStats();
@@ -2075,7 +2327,7 @@ function saveEditedCard() {
   const question = document.getElementById('ecQuestion').value.trim();
   const answer = document.getElementById('ecAnswer').value.trim();
   const difficulty = document.getElementById('ecDifficulty').value;
-  if (!subject || !topic |x !question || !answer) { toast('⚠︎ Preencha todos os campos'); return; }
+  if (!subject || !topic || !question || !answer) { toast('⚠️ Preencha todos os campos'); return; }
   _app.cards[idx] = { ..._app.cards[idx], subject, topic, question, answer, difficulty };
   save(); renderLibrary(); renderHome(); renderStats();
   closeModal('editCardModal');
@@ -2095,7 +2347,7 @@ function requestNotifications() {
   Notification.requestPermission().then(permission => {
     if (permission === 'granted') {
       _app.settings.notifEnabled = true; save();
-      document.getElementById('notifStatus').innerHTML = '<span style="color:var(--green)">✅ Notificaç��es ativadas!</span>';
+      document.getElementById('notifStatus').innerHTML = '<span style="color:var(--green)">✅ Notificações ativadas!</span>';
       document.getElementById('notifBtn').textContent = '🔔 Notificações ativas';
       clearTimeout(_reminderTimer);
       scheduleStudyReminder();
@@ -2103,7 +2355,7 @@ function requestNotifications() {
       toast('✅ Notificações ativadas!');
     } else {
       document.getElementById('notifStatus').innerHTML = '<span style="color:var(--red)">❌ Permissão negada. Habilite nas configurações do navegador.</span>';
-      toast('❌ Permiss��o negada pelo navegador');
+      toast('❌ Permissão negada pelo navegador');
     }
   });
 }
@@ -2130,7 +2382,7 @@ function scheduleStudyReminder() {
     if (lastStudy !== today || todayXp < goal) {
       const streak = _app.stats.streak || 0;
       const body = streak > 0
-        ? `Você tem ${streak} dias de ofensiva! 🔥 Não perca hoje!`
+        ? `Vocà tem ${streak} dias de ofensiva! 🔥 Não perca hoje!`
         : `Hora de estudar! Comece sua ofensiva hoje. 📚`;
       new Notification('FlashStudy 📚', { body });
     }
@@ -2164,6 +2416,147 @@ function syncNotifUI() {
 function esc(s) { return String(s||'').replace(/'/g,"\\'"); }
 function esc2(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function generateId() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+
+function testApiKey(provider) {
+  const keyFieldMap = {
+    'claude': 'keyClaude',
+    'openai': 'keyOpenAI',
+    'gemini': 'keyGemini'
+  };
+  
+  const fieldId = keyFieldMap[provider];
+  if (!fieldId) return;
+  
+  const keyInput = document.getElementById(fieldId);
+  const key = keyInput.value.trim();
+  
+  if (!key) {
+    show('Insira uma chave de API primeiro');
+    return;
+  }
+  
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ Testando...';
+  btn.disabled = true;
+  
+  const testPrompt = 'Say "ok" in one word.';
+  
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 10,
+      messages: [{role: 'user', content: testPrompt}]
+    })
+  })
+  .then(r => {
+    if (r.ok) {
+      show('Chave Claude valida!');
+      btn.textContent = originalText;
+      btn.disabled = false;
+      return r.json();
+    } else if (r.status === 401) {
+      show('Chave invalida ou expirada');
+      btn.textContent = originalText;
+      btn.disabled = false;
+    } else {
+      show('Erro ao testar: HTTP ' + r.status);
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  })
+  .catch(err => {
+    show('Erro de conexao: ' + err.message);
+    btn.textContent = originalText;
+    btn.disabled = false;
+  });
+}
+
+function showMascotSpeech(text) {
+  const mascotContainer = document.getElementById('appMascotContainer');
+  if (!mascotContainer) return;
+  
+  let speechEl = mascotContainer.querySelector('.mascot-speech');
+  if (!speechEl) {
+    speechEl = document.createElement('div');
+    speechEl.className = 'mascot-speech';
+    mascotContainer.appendChild(speechEl);
+  }
+  
+  speechEl.textContent = text;
+  speechEl.classList.add('show');
+  setTimeout(() => speechEl.classList.remove('show'), 2000);
+}
+
+function mascotClick() {
+  const mascot = document.getElementById('appMascotContainer') || document.getElementById('loginMascot');
+  if (!mascot) return;
+  mascot.classList.remove('bounce');
+  void mascot.offsetWidth;
+  mascot.classList.add('bounce');
+  const moods = ['Pronto para estudar!', 'Voce consegue!', 'Estudar eh legal!', 'Vamos aprender!'];
+  showMascotSpeech(moods[Math.floor(Math.random() * moods.length)]);
+}
+
+function renderDailyReview() {
+  const reviewContainer = document.getElementById('dailyReview');
+  if (!reviewContainer) return;
+  
+  const cardsNeedingReview = _app.cards.filter(c => {
+    const total = (c.correct||0) + (c.wrong||0);
+    return total > 0;
+  }).sort((a, b) => {
+    const totalA = (a.correct||0) + (a.wrong||0);
+    const totalB = (b.correct||0) + (b.wrong||0);
+    const rateA = (a.wrong||0) / totalA;
+    const rateB = (b.wrong||0) / totalB;
+    
+    if (Math.abs(rateA - rateB) > 0.05) return rateB - rateA;
+    return (b.lastStudied||0) - (a.lastStudied||0);
+  }).slice(0, 20);
+  
+  if (!cardsNeedingReview.length) {
+    reviewContainer.innerHTML = '<div style="text-align:center;padding:24px;color:var(--green);font-weight:700">✅ Tudo em dia!</div>';
+    return;
+  }
+  
+  const cardsHtml = cardsNeedingReview.map(c => {
+    const total = (c.correct||0) + (c.wrong||0);
+    const wrongRate = Math.round((c.wrong||0)/total*100);
+    const diffClass = c.difficulty==='facil'?'easy':c.difficulty==='dificil'?'hard':'medium';
+    
+    return `<div style="padding:12px;border-bottom:1px solid var(--line);cursor:pointer;transition:all 0.2s" onclick="startStudySession([_app.cards.find(x=>x.id===\'${c.id}\')])" onmouseover="this.style.background='var(--panel2)'" onmouseout="this.style.background=''">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px">${esc2(c.question.substring(0,40))}...</div>
+          <div style="font-size:12px;color:var(--muted)">${esc2(c.subject)} › ${esc2(c.topic)}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="card-badge ${diffClass}" style="font-size:11px">${c.difficulty||'medio'}</span>
+          <span style="color:var(--red);font-weight:700;font-size:13px">${wrongRate}% erros</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  
+  reviewContainer.innerHTML = `<div>${cardsHtml}</div><button class="btn btn-green" style="width:100%;margin-top:12px" onclick="startStudySession(${JSON.stringify(cardsNeedingReview).replace(/'/g, "\\'")})">▶ Iniciar Revisao</button>`;
+}
+
+function filterAndStudy(subject) {
+  const filtered = _app.cards.filter(c => c.subject === subject);
+  if (!filtered.length) {
+    show('Nenhum card nessa materia');
+    return;
+  }
+  startStudySession(filtered);
+}
+
 </script>
 </body>
 </html>
